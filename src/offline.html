@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Hors ligne</title>
+<style>
+  html, body { height: 100%; margin: 0; background: #0f0f14; color: #e8e8f0;
+    font-family: "Segoe UI", system-ui, sans-serif; }
+  body { display: grid; place-items: center; text-align: center; }
+  h1 { font-size: 22px; margin: 0 0 8px; }
+  p { color: #8a8a9a; margin: 0 0 22px; }
+  button { background: #2a2a38; color: #fff; border: 0; border-radius: 8px;
+    padding: 10px 22px; font-size: 14px; cursor: pointer; }
+  button:hover { background: #3a3a4c; }
+</style>
+</head>
+<body>
+  <div>
+    <h1 id="h">Impossible de charger le service</h1>
+    <p>Vérifie ta connexion Internet, puis réessaie.</p>
+    <button id="retry">Réessayer</button>
+  </div>
+<script>
+  const q = new URLSearchParams(location.search);
+  const url = q.get('url');
+  if (q.get('name')) document.getElementById('h').textContent = 'Impossible de charger ' + q.get('name');
+  document.getElementById('retry').onclick = () => { if (url) location.href = url; };
+  window.addEventListener('online', () => { if (url) location.href = url; });
+</script>
+</body>
+</html>

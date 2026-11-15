@@ -1,0 +1,77 @@
+name: Programme Windows
+
+# Fabrique PoseyHub-Setup.exe et PoseyHub-portable.exe sur un PC Windows de GitHub,
+# et les met dans la publication « windows » : le site les propose au téléchargement,
+# et PoseyHub s'en sert pour se mettre à jour tout seul (fichier latest.yml).
+# Chaque fabrication reçoit un nouveau numéro de version : 1.0.<numéro de fabrication>.
+on:
+  push:
+    branches: [main]
+    paths: ["src/**", "assets/**", "build/**", "package.json", ".github/workflows/windows.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: windows
+  cancel-in-progress: false
+
+jobs:
+  exe:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Numéro de version
+        shell: bash
+        run: |
+          BASE=$(node -p "require('./package.json').version.split('.').slice(0, 2).join('.')")
+          V="$BASE.${{ github.run_number }}"
+          npm version "$V" --no-git-tag-version --allow-same-version
+          echo "APP_VERSION=$V" >> "$GITHUB_ENV"
+          echo "Version : $V" | tee journal-windows.txt
+
+      - name: Installation
+        shell: bash
+        run: npm install --no-audit --no-fund 2>&1 | tee -a journal-windows.txt
+
+      - name: Fabrication des .exe
+        shell: bash
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: |
+          npx electron-builder --win --x64 --publish never 2>&1 | tee -a journal-windows.txt
+          ls -la dist | tee -a journal-windows.txt
+          test -f dist/PoseyHub-Setup.exe || { echo "PoseyHub-Setup.exe n'a pas été fabriqué"; exit 1; }
+          test -f dist/latest.yml || { echo "latest.yml manquant"; exit 1; }
+
+      - name: Publication
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES="PoseyHub ${APP_VERSION} pour Windows 10 et 11 : YouTube, Discord et Spotify dans une seule appli.
+
+          - PoseyHub-Setup.exe : installe PoseyHub (raccourci bureau, mises à jour automatiques)
+          - PoseyHub-portable.exe : se lance sans installation
+
+          Site : https://angelotkkt.github.io/PoseyHub/"
+          gh release view windows >/dev/null 2>&1 || gh release create windows --title "PoseyHub pour Windows" --notes "$NOTES" --latest
+          gh release edit windows --title "PoseyHub ${APP_VERSION} pour Windows" --notes "$NOTES"
+          # Les .exe d'abord, latest.yml en dernier : les applis ne voient la nouvelle version qu'une fois les fichiers en ligne
+          gh release upload windows dist/PoseyHub-Setup.exe dist/PoseyHub-Setup.exe.blockmap dist/PoseyHub-portable.exe --clobber
+          gh release upload windows dist/latest.yml journal-windows.txt --clobber
+
+      - name: Journal en cas d'échec
+        if: failure()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view windows-journal >/dev/null 2>&1 || gh release create windows-journal --title "Journal de fabrication Windows" --notes "Dernier échec" --latest=false --prerelease
+          gh release upload windows-journal journal-windows.txt --clobber || true

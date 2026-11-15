@@ -1,0 +1,72 @@
+{
+  "name": "poseyhub",
+  "productName": "PoseyHub",
+  "version": "1.0.0",
+  "description": "YouTube, Discord et Spotify réunis dans une seule appli de bureau — par PoseyDevs",
+  "author": "PoseyDevs",
+  "license": "UNLICENSED",
+  "private": true,
+  "homepage": "https://angelotkkt.github.io/PoseyHub/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Angelotkkt/PoseyHub.git"
+  },
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --x64 --publish never"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "github:castlabs/electron-releases#v44.9.3+wvcus",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.poseydevs.poseyhub",
+    "productName": "PoseyHub",
+    "copyright": "© PoseyDevs",
+    "electronVersion": "44.9.3+wvcus",
+    "electronDownload": {
+      "version": "44.9.3+wvcus",
+      "mirror": "https://github.com/castlabs/electron-releases/releases/download/v"
+    },
+    "afterPack": "./build/afterPack.js",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://github.com/Angelotkkt/PoseyHub/releases/download/windows",
+        "channel": "latest"
+      }
+    ],
+    "win": {
+      "icon": "assets/icon.png",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "portable": {
+      "artifactName": "PoseyHub-portable.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "PoseyHub",
+      "artifactName": "PoseyHub-Setup.exe"
+    }
+  }
+}

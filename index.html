@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PoseyHub : YouTube, Discord et Spotify dans une seule appli</title>
+<meta name="description" content="PoseyHub est une appli Windows gratuite qui réunit YouTube, Discord et Spotify dans une seule fenêtre. Par PoseyDevs.">
+<link rel="icon" href="icone.png">
+<style>
+  :root {
+    --nuit: #0f0f14; --encre: #16161e; --encre-2: #1e1e29; --trait: #2a2a38;
+    --brume: #8f8fa3; --craie: #ececf4;
+    --rouge: #ff3b3b; --bleu: #5865f2; --vert: #1ed760; --or: #ffc44d;
+    --f-titre: "Bahnschrift SemiCondensed", "Bahnschrift", "Arial Narrow", "Roboto Condensed", sans-serif;
+    --f-texte: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; overflow-x: hidden; background: var(--nuit); color: var(--craie); font: 17px/1.6 var(--f-texte); }
+  body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(700px 420px at 12% 0%, rgba(255,59,59,.13), transparent 70%),
+                radial-gradient(700px 460px at 55% 4%, rgba(88,101,242,.14), transparent 70%),
+                radial-gradient(700px 420px at 100% 10%, rgba(30,215,96,.10), transparent 70%); }
+  a { color: var(--vert); }
+  :focus-visible { outline: 3px solid var(--or); outline-offset: 3px; border-radius: 6px; }
+  .page { max-width: 1160px; margin: 0 auto; padding: 0 28px; }
+  svg { display: block; }
+
+  /* ---------- en-tête */
+  header { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; }
+  .marque { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
+  .marque img { width: 40px; height: 40px; }
+  .marque b { font: 700 25px/1 var(--f-titre); letter-spacing: .3px; }
+  .marque small { display: block; font: 600 11px/1 var(--f-texte); color: var(--brume); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
+  header nav { display: flex; gap: 22px; font-size: 15px; }
+  header nav a { color: var(--brume); text-decoration: none; }
+  header nav a:hover { color: var(--craie); }
+
+  /* ---------- héros */
+  .heros { display: grid; grid-template-columns: 1fr 1.15fr; gap: 56px; align-items: center; padding: 48px 0 90px; }
+  h1 { font: 700 clamp(44px, 6vw, 74px)/.98 var(--f-titre); letter-spacing: -1px; margin: 0 0 22px; }
+  h1 .r { color: var(--rouge); } h1 .b { color: var(--bleu); } h1 .v { color: var(--vert); }
+  .heros p.intro { color: var(--brume); font-size: 19px; max-width: 32em; margin: 0 0 32px; }
+  .boutons { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .telecharger { display: inline-flex; align-items: center; gap: 12px; padding: 16px 26px; border-radius: 14px;
+    background: var(--craie); color: #101016; font: 700 19px/1 var(--f-texte); text-decoration: none;
+    box-shadow: 0 5px 0 #8c8ca0; transition: transform .12s, box-shadow .12s; }
+  .telecharger:hover { transform: translateY(2px); box-shadow: 0 3px 0 #8c8ca0; }
+  .telecharger:active { transform: translateY(5px); box-shadow: none; }
+  .telecharger svg { width: 24px; height: 24px; }
+  .telecharger[aria-disabled="true"] { background: var(--encre-2); color: var(--brume); box-shadow: none; pointer-events: none; }
+  .secondaire { color: var(--brume); font-size: 15px; }
+  .secondaire[aria-disabled="true"] { display: none; }
+  .meta { color: var(--brume); font-size: 14px; margin-top: 16px; }
+
+  /* Fenêtre d'aperçu (dessinée en CSS) */
+  .fenetre { border-radius: 16px; overflow: hidden; background: #0b0b10; border: 1.5px solid var(--trait);
+    box-shadow: 0 40px 90px rgba(0,0,0,.65), 0 0 0 8px rgba(255,255,255,.02); transform: perspective(1400px) rotateY(-7deg) rotateX(2deg); }
+  .f-haut { height: 30px; display: flex; align-items: center; gap: 8px; padding: 0 12px; background: #0f0f14; border-bottom: 1px solid #1c1c26;
+    font-size: 11px; color: var(--brume); }
+  .f-haut b { color: var(--craie); font-weight: 700; } .f-haut b span { color: var(--vert); }
+  .f-haut .ctrls { margin-left: auto; display: flex; gap: 14px; letter-spacing: 2px; }
+  .f-corps { display: grid; grid-template-columns: 54px 1fr; height: 300px; }
+  .f-side { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 10px 0; background: #0f0f14; }
+  .f-ico { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; background: var(--encre); color: var(--brume); position: relative; }
+  .f-ico svg { width: 18px; height: 18px; }
+  .f-ico.on { background: var(--vert); color: #0b0b0f; border-radius: 11px; }
+  .f-ico.on::before { content: ""; position: absolute; left: -9px; width: 3px; height: 26px; border-radius: 0 3px 3px 0; background: var(--craie); }
+  .f-ico .pastille { position: absolute; right: -4px; bottom: -4px; min-width: 16px; height: 16px; padding: 0 3px; border-radius: 8px; border: 2px solid #0f0f14;
+    background: #f23f43; color: #fff; font: 700 9px/12px var(--f-texte); text-align: center; }
+  .f-main { padding: 14px 16px; overflow: hidden; display: flex; flex-direction: column; }
+  .f-main h4 { margin: 0 0 10px; font: 700 18px/1.1 var(--f-titre); }
+  .f-cartes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+  .f-carte { background: var(--encre); border-radius: 8px; padding: 6px; }
+  .f-carte i { display: block; aspect-ratio: 1; border-radius: 5px; margin-bottom: 6px; }
+  .f-carte b { display: block; height: 6px; width: 80%; border-radius: 3px; background: #3a3a48; }
+  .f-carte s { display: block; height: 5px; width: 50%; border-radius: 3px; background: #2a2a36; margin-top: 4px; }
+  .f-lecteur { margin-top: auto; display: grid; grid-template-columns: 1fr 1.4fr 1fr; align-items: center; gap: 10px; padding-top: 12px; border-top: 1px solid #1c1c26; }
+  .f-titre { display: flex; gap: 8px; align-items: center; font-size: 10.5px; }
+  .f-titre i { width: 30px; height: 30px; border-radius: 4px; background: linear-gradient(135deg, #5865f2, #1ed760); flex: none; }
+  .f-titre small { display: block; color: var(--brume); font-size: 9.5px; }
+  .f-ctrl { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .f-ctrl .rond { width: 22px; height: 22px; border-radius: 50%; background: var(--craie); display: grid; place-items: center; }
+  .f-ctrl .rond::after { content: ""; width: 6px; height: 8px; border-left: 2px solid #0b0b0f; border-right: 2px solid #0b0b0f; }
+  .f-prog { width: 100%; height: 3px; border-radius: 2px; background: #33333f; position: relative; }
+  .f-prog::after { content: ""; position: absolute; inset: 0 60% 0 0; border-radius: 2px; background: var(--craie); }
+  .f-app { justify-self: end; font-size: 10px; color: var(--vert); }
+
+  /* ---------- sections */
+  section { padding: 72px 0; border-top: 1px dashed var(--trait); }
+  h2 { font: 700 clamp(32px, 4vw, 46px)/1.05 var(--f-titre); margin: 0 0 12px; }
+  .chapeau { color: var(--brume); max-width: 40em; margin: 0 0 40px; }
+
+  .trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; padding-top: 30px; }
+  .service { --c: var(--brume); background: var(--encre); border-radius: 22px; padding: 26px 22px 22px; position: relative;
+    border: 2px solid color-mix(in srgb, var(--c) 50%, var(--trait)); }
+  .service:nth-child(odd) { transform: rotate(-1.2deg); } .service:nth-child(even) { transform: rotate(1deg); }
+  .service .rond { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; margin: -54px 0 14px;
+    background: color-mix(in srgb, var(--c) 30%, var(--encre-2)); color: var(--c); border: 4px solid var(--craie); box-shadow: 0 6px 0 rgba(0,0,0,.35); }
+  .service .rond svg { width: 34px; height: 34px; }
+  .service h3 { font: 700 24px/1.1 var(--f-titre); margin: 0 0 8px; }
+  .service p { margin: 0; color: var(--brume); font-size: 15px; line-height: 1.5; }
+  .service .plus { display: inline-block; margin-top: 12px; font-size: 13px; font-weight: 600; color: var(--c); }
+
+  .forts { display: grid; grid-template-columns: 1fr 1fr; gap: 30px 48px; }
+  .fort { display: grid; grid-template-columns: 52px 1fr; gap: 16px; align-items: start; }
+  .fort .ico { width: 52px; height: 52px; border-radius: 14px; background: var(--encre-2); display: grid; place-items: center; color: var(--or); }
+  .fort .ico svg { width: 26px; height: 26px; }
+  .fort h3 { font: 700 21px/1.2 var(--f-titre); margin: 4px 0 6px; }
+  .fort p { margin: 0; color: var(--brume); font-size: 15.5px; }
+
+  .etapes { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px; counter-reset: e; }
+  .etapes li { counter-increment: e; position: relative; padding-top: 70px; }
+  .etapes li::before { content: counter(e); position: absolute; top: 0; left: 0; font: 700 64px/1 var(--f-titre); color: var(--or); }
+  .etapes h3 { font: 700 22px/1.2 var(--f-titre); margin: 0 0 8px; }
+  .etapes p { margin: 0; color: var(--brume); font-size: 15.5px; }
+  kbd { font: 600 13px var(--f-texte); background: var(--encre-2); border: 1px solid var(--trait); border-bottom-width: 3px; border-radius: 6px; padding: 1px 7px; color: var(--craie); }
+  .raccourcis { display: flex; flex-wrap: wrap; gap: 10px 26px; margin-top: 34px; color: var(--brume); font-size: 15px; }
+
+  .questions { max-width: 780px; }
+  details { border-bottom: 1px solid var(--trait); padding: 18px 0; }
+  summary { cursor: pointer; font-weight: 600; font-size: 18px; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; color: var(--or); font: 700 24px/1 var(--f-titre); }
+  details[open] summary::after { content: "–"; }
+  details p, details ol, details ul { color: var(--brume); margin: 12px 0 0; font-size: 15.5px; }
+  details ol, details ul { padding-left: 22px; }
+  code { background: var(--encre-2); padding: 1px 6px; border-radius: 5px; font-size: 14px; color: var(--craie); }
+
+  .final { text-align: center; padding: 84px 0; border-top: 1px dashed var(--trait); }
+  .final h2 { margin-bottom: 26px; }
+  footer { color: var(--brume); font-size: 13px; padding: 28px 0 48px; border-top: 1px solid var(--trait); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .heros { grid-template-columns: 1fr; gap: 48px; padding-top: 24px; }
+    .fenetre { transform: none; }
+    .trio, .etapes, .forts { grid-template-columns: 1fr; }
+    .trio { gap: 56px; }
+    header nav { display: none; }
+  }
+  @media (max-width: 480px) { .page { padding: 0 18px; } .f-cartes { grid-template-columns: repeat(3, 1fr); } .f-cartes .f-carte:nth-child(4) { display: none; } }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .telecharger { transition: none; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a class="marque" href="#"><img src="icone.png" alt=""><span><b>PoseyHub</b><small>par PoseyDevs</small></span></a>
+    <nav><a href="#services">Ce qu'il y a dedans</a><a href="#installer">Installer</a><a href="#spotify">Spotify</a><a href="#questions">Questions</a></nav>
+  </header>
+
+  <!-- ===== Héros ===== -->
+  <div class="heros">
+    <div>
+      <h1><span class="r">Vidéos</span>, <span class="b">potes</span> et <span class="v">musique</span>.<br>Une seule appli.</h1>
+      <p class="intro">PoseyHub réunit YouTube, Discord et Spotify dans une vraie appli Windows.
+        Tu passes de l'un à l'autre en un clic, ta musique continue pendant que tu discutes, et tes notifications restent à portée de main.</p>
+      <div class="boutons">
+        <a class="telecharger" id="telecharger" href="#installer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg>
+          <span id="texte-telecharger">Télécharger pour Windows</span></a>
+        <a class="secondaire" id="portable" href="#installer">ou la version portable (sans installation)</a>
+      </div>
+      <div class="meta" id="meta">Gratuit · Windows 10 et 11</div>
+    </div>
+
+    <div class="fenetre" aria-hidden="true">
+      <div class="f-haut"><b>P<span>H</span></b>&nbsp; Spotify — Bon après-midi<span class="ctrls">–&nbsp;▢&nbsp;✕</span></div>
+      <div class="f-corps">
+        <div class="f-side">
+          <div class="f-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="4"/><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor"/></svg></div>
+          <div class="f-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg><span class="pastille">3</span></div>
+          <div class="f-ico on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></div>
+        </div>
+        <div class="f-main">
+          <h4>Écoutés récemment</h4>
+          <div class="f-cartes">
+            <div class="f-carte"><i style="background:linear-gradient(135deg,#ff3b3b,#ffc44d)"></i><b></b><s></s></div>
+            <div class="f-carte"><i style="background:linear-gradient(135deg,#5865f2,#9b5de5)"></i><b></b><s></s></div>
+            <div class="f-carte"><i style="background:linear-gradient(135deg,#1ed760,#118ab2)"></i><b></b><s></s></div>
+            <div class="f-carte"><i style="background:linear-gradient(135deg,#ef476f,#5865f2)"></i><b></b><s></s></div>
+          </div>
+          <div class="f-lecteur">
+            <div class="f-titre"><i></i><span>Night Drive<small>Lumen</small></span></div>
+            <div class="f-ctrl"><span class="rond"></span><span class="f-prog"></span></div>
+            <div class="f-app">● PC</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Services ===== -->
+  <section id="services">
+    <h2>Trois applis, une seule fenêtre</h2>
+    <p class="chapeau">Une barre sur le côté, trois boutons. Chaque service garde ta connexion et continue de tourner quand tu changes d'onglet.</p>
+    <div class="trio">
+      <div class="service" style="--c: var(--rouge)">
+        <div class="rond"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="4"/><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor"/></svg></div>
+        <h3>YouTube</h3>
+        <p>Tes abonnements, tes vidéos et le plein écran qui prend vraiment tout l'écran.</p>
+        <span class="plus">Ctrl + 1</span>
+      </div>
+      <div class="service" style="--c: var(--bleu)">
+        <div class="rond"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/><circle cx="9" cy="12" r=".9" fill="currentColor"/><circle cx="13" cy="12" r=".9" fill="currentColor"/><circle cx="17" cy="12" r=".9" fill="currentColor"/></svg></div>
+        <h3>Discord</h3>
+        <p>Messages, appels, micro, caméra et partage d'écran. Les messages non lus s'affichent sur l'icône.</p>
+        <span class="plus">Ctrl + 2</span>
+      </div>
+      <div class="service" style="--c: var(--vert)">
+        <div class="rond"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></div>
+        <h3>Spotify</h3>
+        <p>Un lecteur relié à ton compte par la connexion officielle de Spotify : playlists, recherche, appareils.</p>
+        <span class="plus">Ctrl + 3</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Points forts ===== -->
+  <section>
+    <h2>Pensé pour rester ouvert toute la journée</h2>
+    <p class="chapeau">Quand tu fermes la fenêtre, PoseyHub se range près de l'horloge et ta musique continue.</p>
+    <div class="forts">
+      <div class="fort"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
+        <div><h3>Notifications</h3><p>Pastilles de messages non lus dans la barre et sur l'icône de la barre des tâches, et notifications Windows pour Discord.</p></div></div>
+      <div class="fort"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l5.5-3.5z" fill="currentColor"/></svg></div>
+        <div><h3>Musique en fond</h3><p>Clic droit sur l'icône près de l'horloge : lecture, pause, titre suivant, sans rouvrir la fenêtre.</p></div></div>
+      <div class="fort"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg></div>
+        <div><h3>Mises à jour automatiques</h3><p>Les nouvelles versions s'installent toutes seules quand tu quittes PoseyHub. Pas besoin de désinstaller.</p></div></div>
+      <div class="fort"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+        <div><h3>Tes connexions restent chez toi</h3><p>Chaque service garde ses propres cookies sur ton PC. Les accès Spotify sont chiffrés avec le coffre de Windows.</p></div></div>
+    </div>
+    <div class="raccourcis">
+      <span><kbd>Ctrl</kbd> + <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> changer de service</span>
+      <span><kbd>Ctrl</kbd> + <kbd>Tab</kbd> service suivant</span>
+      <span><kbd>Ctrl</kbd> + <kbd>R</kbd> actualiser</span>
+      <span><kbd>F11</kbd> plein écran</span>
+    </div>
+  </section>
+
+  <!-- ===== Installer ===== -->
+  <section id="installer">
+    <h2>Installer PoseyHub</h2>
+    <p class="chapeau">Deux minutes, et c'est fait une fois pour toutes.</p>
+    <ol class="etapes">
+      <li><h3>Télécharge</h3><p>Clique sur « Télécharger pour Windows ». Tu obtiens <code>PoseyHub-Setup.exe</code>.</p></li>
+      <li><h3>Lance l'installation</h3><p>Windows peut dire « Windows a protégé votre ordinateur », parce que l'appli n'est pas signée.
+        Clique sur <b>Informations complémentaires</b> puis <b>Exécuter quand même</b>.</p></li>
+      <li><h3>Connecte-toi</h3><p>Ouvre PoseyHub depuis le raccourci du bureau et connecte-toi à YouTube, Discord et Spotify. C'est retenu pour la suite.</p></li>
+    </ol>
+  </section>
+
+  <!-- ===== Spotify ===== -->
+  <section id="spotify">
+    <h2>Spotify, avec la connexion officielle</h2>
+    <p class="chapeau">L'onglet Spotify est un lecteur PoseyHub relié à ton compte par Spotify for Developers.
+      La première fois, PoseyHub t'explique tout pas à pas.</p>
+    <div class="forts">
+      <div class="fort"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
+        <div><h3>1. Crée ton appli Spotify</h3><p>Sur <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">developer.spotify.com</a> : « Create app »,
+          adresse de retour <code>http://127.0.0.1:47823/callback</code>, puis coche Web API et Web Playback SDK.</p></div></div>
+      <div class="fort"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2L20 3M16 7l3 3M18 5l2 2"/></svg></div>
+        <div><h3>2. Colle le Client ID</h3><p>Copie le Client ID de ton appli dans PoseyHub, puis clique sur « Se connecter avec Spotify ». La page officielle s'ouvre dans ton navigateur.</p></div></div>
+    </div>
+    <p class="chapeau" style="margin-top:34px">Spotify demande un compte <b>Premium</b> pour créer une appli et piloter la lecture. Ton appli Spotify peut servir à 5 comptes au maximum.
+      La musique peut jouer dans PoseyHub ou dans l'appli Spotify officielle (PC, téléphone, enceinte).</p>
+  </section>
+
+  <!-- ===== Questions ===== -->
+  <section id="questions">
+    <h2>Questions</h2>
+    <div class="questions">
+      <details><summary>C'est gratuit ?</summary><p>Oui, entièrement. PoseyHub est un projet perso de PoseyDevs.</p></details>
+      <details><summary>C'est quoi la différence entre l'installation et la version portable ?</summary>
+        <ul><li><b>PoseyHub-Setup.exe</b> installe l'appli avec un raccourci sur le bureau et dans le menu Démarrer, et se met à jour tout seul.</li>
+          <li><b>PoseyHub-portable.exe</b> se lance directement, sans installation (pratique sur une clé USB). Elle te prévient quand une nouvelle version sort, mais ne s'installe pas toute seule.</li></ul></details>
+      <details><summary>Pourquoi Windows affiche un avertissement ?</summary>
+        <p>Les applis non signées avec un certificat payant déclenchent SmartScreen. Le code de PoseyHub est public sur GitHub, et le .exe est fabriqué directement par GitHub à partir de ce code.</p></details>
+      <details><summary>Google refuse la connexion à YouTube</summary>
+        <p>Ça arrive parfois avec les applis de bureau. Connecte-toi directement sur YouTube avec ton e-mail et ton mot de passe, plutôt qu'avec « Se connecter avec Google » depuis un autre site.</p></details>
+      <details><summary>Comment quitter complètement PoseyHub ?</summary>
+        <p>Clic droit sur l'icône près de l'horloge, puis « Quitter PoseyHub ». Tu peux aussi décocher « Garder ouvert dans la zone de notification » dans les réglages (roue crantée en bas à gauche).</p></details>
+      <details><summary>Comment le désinstaller ?</summary>
+        <p>Paramètres Windows → Applications → PoseyHub → Désinstaller. Tes connexions sont stockées dans <code>%APPDATA%\PoseyHub</code>.</p></details>
+    </div>
+  </section>
+
+  <div class="final">
+    <h2>Prêt à tout réunir ?</h2>
+    <a class="telecharger" id="telecharger-2" href="#installer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg>
+      Télécharger PoseyHub</a>
+  </div>
+
+  <footer>
+    PoseyHub est un projet perso de PoseyDevs, gratuit, sans lien avec YouTube (Google), Discord ou Spotify.
+    Les noms des services appartiennent à leurs propriétaires.
+    · <a href="https://github.com/Angelotkkt/PoseyHub">Code et mises à jour sur GitHub</a>
+  </footer>
+</div>
+
+<script>
+  // Les boutons pointent vers la dernière version fabriquée par GitHub (publication « windows »)
+  const DEPOT = "Angelotkkt/PoseyHub";
+  const boutons = [document.getElementById("telecharger"), document.getElementById("telecharger-2")];
+  const portable = document.getElementById("portable");
+  fetch(`https://api.github.com/repos/${DEPOT}/releases/tags/windows`)
+    .then((r) => (r.ok ? r.json() : null))
+    .then((rel) => {
+      const setup = rel?.assets?.find((a) => a.name === "PoseyHub-Setup.exe");
+      const port = rel?.assets?.find((a) => a.name === "PoseyHub-portable.exe");
+      if (!setup) throw new Error("pas encore de fichier");
+      boutons.forEach((b) => { b.href = setup.browser_download_url; });
+      if (port) portable.href = port.browser_download_url; else portable.setAttribute("aria-disabled", "true");
+      const mo = (setup.size / 1048576).toLocaleString("fr-FR", { maximumFractionDigits: 0 });
+      const version = (/(\d+\.\d+\.\d+)/.exec(rel.name || "") || [])[1];
+      document.getElementById("meta").textContent =
+        `${version ? "Version " + version : "Dernière version"} · ${mo} Mo · Gratuit · Windows 10 et 11`;
+    })
+    .catch(() => {
+      boutons.forEach((b) => { b.setAttribute("aria-disabled", "true"); b.removeAttribute("href"); });
+      portable.setAttribute("aria-disabled", "true");
+      document.getElementById("texte-telecharger").textContent = "Bientôt disponible";
+      document.getElementById("meta").textContent = "Le téléchargement arrive très bientôt.";
+    });
+</script>
+</body>
+</html>
