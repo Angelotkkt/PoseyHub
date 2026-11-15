@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: poseyhub:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+<title>Jeux</title>
+<style>
+  :root {
+    --bg: #0f0f14; --panel: #16161e; --panel2: #1c1c26; --hover: #24242f; --line: #22222d;
+    --text: #e8e8f0; --muted: #8a8a9a; --gold: #ffb020; --gold-ink: #1a1204;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); overflow: hidden;
+    font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; font-size: 14px; }
+  button, select, input { font: inherit; color: inherit; }
+  button { background: none; border: 0; cursor: pointer; }
+  svg { width: 18px; height: 18px; flex: none; }
+  ::-webkit-scrollbar { width: 10px; } ::-webkit-scrollbar-thumb { background: #2a2a36; border-radius: 5px; border: 2px solid var(--bg); }
+  .hidden { display: none !important; }
+
+  .wrap { height: 100%; display: flex; flex-direction: column; }
+  .top { display: flex; align-items: center; gap: 12px; padding: 16px 24px 10px; flex-wrap: wrap; }
+  .top h1 { font-size: 24px; font-weight: 750; letter-spacing: -.3px; }
+  .count { color: var(--muted); font-size: 13px; margin-left: -4px; margin-top: 6px; }
+  .grow { flex: 1; }
+  .search { display: flex; align-items: center; gap: 8px; background: var(--panel); border-radius: 999px; padding: 7px 14px; width: 260px; color: var(--muted); }
+  .search:focus-within { box-shadow: 0 0 0 2px var(--gold); }
+  .search input { flex: 1; background: none; border: 0; outline: none; color: var(--text); min-width: 0; }
+  select { background: var(--panel); border: 0; border-radius: 8px; padding: 7px 10px; outline: none; cursor: pointer; }
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 8px; background: var(--panel); font-weight: 600; white-space: nowrap; }
+  .btn:hover { background: var(--hover); }
+  .btn.gold { background: var(--gold); color: var(--gold-ink); }
+  .btn.gold:hover { filter: brightness(1.08); }
+  .btn.spin svg { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .filters { display: flex; gap: 6px; padding: 0 24px 12px; flex-wrap: wrap; }
+  .chip { padding: 5px 12px; border-radius: 999px; background: var(--panel); color: var(--muted); font-size: 12.5px; font-weight: 600; }
+  .chip:hover { color: var(--text); background: var(--hover); }
+  .chip.on { background: var(--text); color: #0b0b0f; }
+  .chip span { opacity: .6; margin-left: 4px; }
+
+  main { flex: 1; overflow-y: auto; padding: 4px 24px 24px; }
+  h2 { font-size: 17px; margin: 18px 0 12px; display: flex; align-items: center; gap: 8px; }
+  h2 small { color: var(--muted); font-weight: 500; font-size: 13px; }
+
+  /* Bannière « Reprendre » */
+  .hero { position: relative; border-radius: 16px; overflow: hidden; min-height: 210px; display: flex; align-items: flex-end;
+    background: var(--panel); margin-top: 6px; cursor: pointer; }
+  .hero .bg { position: absolute; inset: -30px; background-size: cover; background-position: center; filter: blur(26px) saturate(1.3); opacity: .55; transform: scale(1.1); }
+  .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(15,15,20,.92) 0%, rgba(15,15,20,.55) 55%, rgba(15,15,20,.15) 100%); }
+  .hero .in { position: relative; z-index: 1; display: flex; gap: 22px; align-items: flex-end; padding: 22px; width: 100%; }
+  .hero .art { width: 120px; flex: none; border-radius: 10px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,.5); }
+  .hero .kicker { color: var(--gold); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; }
+  .hero h3 { font-size: clamp(24px, 3.4vw, 38px); line-height: 1.05; margin: 6px 0 8px; }
+  .hero p { color: #b9b9c8; }
+  .playbig { margin-top: 14px; display: inline-flex; align-items: center; gap: 10px; padding: 11px 26px; border-radius: 999px; background: var(--gold);
+    color: var(--gold-ink); font-weight: 800; font-size: 15px; box-shadow: 0 8px 22px rgba(255,176,32,.25); }
+  .playbig:hover { filter: brightness(1.08); transform: translateY(-1px); }
+  .playbig svg { width: 16px; height: 16px; }
+
+  /* Grilles */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
+  .row { display: grid; grid-auto-flow: column; grid-auto-columns: 150px; gap: 16px; overflow-x: auto; padding-bottom: 6px; }
+  .card { position: relative; border-radius: 12px; cursor: pointer; outline: none; min-width: 0; }
+  .card .art { position: relative; aspect-ratio: 2 / 3; border-radius: 12px; overflow: hidden; background: var(--panel);
+    transition: transform .16s, box-shadow .16s; }
+  .card:hover .art, .card:focus-visible .art { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(0,0,0,.5), 0 0 0 2px var(--gold); }
+  .art img.cover { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .art img.cover.wide { object-position: center; }
+  .tile { position: absolute; inset: 0; display: grid; place-items: center; }
+  .tile .ico { width: 64px; height: 64px; border-radius: 14px; object-fit: contain; filter: drop-shadow(0 6px 14px rgba(0,0,0,.45)); image-rendering: auto; }
+  .tile .ini { font-size: 34px; font-weight: 800; color: rgba(255,255,255,.92); text-shadow: 0 4px 14px rgba(0,0,0,.35); letter-spacing: -1px; }
+  .tile .nm { position: absolute; left: 10px; right: 10px; bottom: 12px; text-align: center; font-weight: 700; font-size: 13px; line-height: 1.25;
+    color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,.6); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .card .play { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%;
+    background: var(--gold); color: var(--gold-ink); display: grid; place-items: center; opacity: 0; transform: scale(.85); transition: .16s;
+    box-shadow: 0 8px 24px rgba(0,0,0,.5); }
+  .card .play svg { width: 20px; height: 20px; margin-left: 2px; }
+  .card:hover .play, .card:focus-visible .play { opacity: 1; transform: none; }
+  .card .fav, .card .more { position: absolute; top: 8px; width: 30px; height: 30px; border-radius: 50%; background: rgba(10,10,14,.7);
+    display: grid; place-items: center; color: #fff; opacity: 0; transition: opacity .15s; backdrop-filter: blur(4px); }
+  .card .fav { left: 8px; } .card .more { right: 8px; }
+  .card .fav svg, .card .more svg { width: 15px; height: 15px; }
+  .card:hover .fav, .card:hover .more, .card .fav.on { opacity: 1; }
+  .card .fav.on { color: var(--gold); }
+  .card .meta { padding: 8px 2px 0; }
+  .card .meta b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+  .card .meta small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card.launching .art::after { content: "Lancement…"; position: absolute; inset: 0; display: grid; place-items: center; background: rgba(10,10,14,.75);
+    color: var(--gold); font-weight: 800; letter-spacing: .3px; }
+  .card.launching .play { display: none; }
+  .card.renaming .meta b { display: none; }
+  .card .meta input { width: 100%; background: var(--panel2); border: 1px solid var(--gold); border-radius: 6px; padding: 3px 6px; outline: none; }
+
+  .empty { text-align: center; color: var(--muted); padding: 60px 20px; line-height: 1.7; }
+  .empty b { color: var(--text); font-size: 17px; display: block; margin-bottom: 6px; }
+  .scanning { display: flex; align-items: center; gap: 10px; justify-content: center; color: var(--muted); padding: 50px 0; }
+  .scanning i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--gold); border-right-color: transparent; animation: spin .8s linear infinite; }
+
+  .foot { display: flex; align-items: center; gap: 18px; padding: 10px 24px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; flex-wrap: wrap; }
+  .foot label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .foot input { accent-color: var(--gold); width: 15px; height: 15px; }
+  .foot .link { color: var(--muted); text-decoration: underline; }
+  .foot .link:hover { color: var(--text); }
+
+  .toast { position: fixed; left: 50%; bottom: 60px; transform: translateX(-50%) translateY(10px); background: #2a2a38; color: var(--text);
+    padding: 10px 16px; border-radius: 8px; max-width: min(560px, 90vw); opacity: 0; pointer-events: none; transition: .2s; z-index: 30;
+    box-shadow: 0 10px 30px rgba(0,0,0,.5); line-height: 1.4; }
+  .toast.show { opacity: 1; transform: translateX(-50%); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Jeux</h1><span class="count" id="count"></span>
+    <div class="grow"></div>
+    <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+      <input id="q" placeholder="Rechercher un jeu…" spellcheck="false" autocomplete="off"></label>
+    <select id="sort" title="Trier">
+      <option value="recent">Récents</option>
+      <option value="name">Nom (A → Z)</option>
+      <option value="time">Temps de jeu</option>
+    </select>
+    <button class="btn" id="scan" title="Chercher à nouveau les jeux installés">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg><span>Actualiser</span></button>
+    <button class="btn gold" id="add" title="Ajouter un jeu qui n'a pas été trouvé (.exe ou raccourci)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Ajouter un jeu</button>
+  </header>
+  <div class="filters" id="filters"></div>
+  <main id="main"></main>
+  <footer class="foot">
+    <label><input type="checkbox" id="minimize"> Réduire PoseyHub quand un jeu se lance</label>
+    <span class="grow"></span>
+    <span id="hidden-info"></span>
+    <span>Double-clic ou Entrée pour jouer · clic droit pour plus d'options</span>
+  </footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const SOURCES = {
+  steam: 'Steam', epic: 'Epic Games', riot: 'Riot', battlenet: 'Battle.net', xbox: 'Xbox', gog: 'GOG', ubisoft: 'Ubisoft',
+  hoyo: 'HoYoverse', roblox: 'Roblox', minecraft: 'Minecraft', ea: 'EA', rockstar: 'Rockstar', autre: 'Autres', ajout: 'Ajoutés',
+};
+const I = {
+  play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>',
+  star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/></svg>',
+  starOn: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/></svg>',
+  more: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>',
+};
+
+let data = { games: [], scanning: false, minimizeOnLaunch: true };
+let filter = 'all';
+
+let toastTimer;
+function toast(msg, ms = 3500) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms);
+}
+
+// ---------- formats ----------
+const rtf = new Intl.RelativeTimeFormat('fr', { numeric: 'auto' });
+function ago(ts) {
+  if (!ts) return '';
+  const s = (ts - Date.now()) / 1000;
+  const abs = Math.abs(s);
+  if (abs < 3600) return rtf.format(Math.round(s / 60), 'minute');
+  if (abs < 86400) return rtf.format(Math.round(s / 3600), 'hour');
+  if (abs < 86400 * 30) return rtf.format(Math.round(s / 86400), 'day');
+  if (abs < 86400 * 365) return rtf.format(Math.round(s / (86400 * 30)), 'month');
+  return rtf.format(Math.round(s / (86400 * 365)), 'year');
+}
+const playtime = (min) => !min ? '' : min < 60 ? `${min} min` : `${Math.round(min / 60).toLocaleString('fr-FR')} h`;
+function hue(name) { let h = 0; for (const c of String(name)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; }
+function initials(name) {
+  const all = String(name).replace(/[^\p{L}\p{N} ]/gu, ' ').split(/\s+/).filter(Boolean);
+  const big = all.filter((x) => /^[\p{Lu}\p{N}]/u.test(x));   // « Call of Duty » → C, D
+  const w = big.length > 1 ? big : all;
+  return (w.length > 1 ? w[0][0] + w[1][0] : (w[0] || '?').slice(0, 2)).toUpperCase();
+}
+function subline(g) {
+  const parts = [SOURCES[g.source] || g.source];
+  if (g.playtime) parts.push(playtime(g.playtime));
+  else if (g.lastPlayed) parts.push(ago(g.lastPlayed));
+  return parts.join(' · ');
+}
+
+// ---------- rendu ----------
+function art(g) {
+  if (g.cover) return `<img class="cover ${g.coverPortrait ? '' : 'wide'}" src="${esc(g.cover)}" alt="" loading="lazy" draggable="false">`;
+  const h = hue(g.name);
+  return `<div class="tile" style="background:linear-gradient(160deg,hsl(${h} 55% 34%),hsl(${(h + 40) % 360} 60% 16%))">
+    ${g.icon ? `<img class="ico" src="${esc(g.icon)}" alt="" draggable="false">` : `<span class="ini">${esc(initials(g.name))}</span>`}
+    <span class="nm">${esc(g.name)}</span></div>`;
+}
+function card(g) {
+  return `<div class="card" tabindex="0" data-id="${esc(g.id)}" title="${esc(g.name)}">
+    <div class="art">${art(g)}</div>
+    <button class="play" data-act="play" title="Jouer">${I.play}</button>
+    <button class="fav ${g.favorite ? 'on' : ''}" data-act="fav" title="${g.favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}">${g.favorite ? I.starOn : I.star}</button>
+    <button class="more" data-act="more" title="Plus d'options">${I.more}</button>
+    <div class="meta"><b>${esc(g.name)}</b><small>${esc(subline(g))}</small></div>
+  </div>`;
+}
+
+function sorted(list) {
+  const mode = $('#sort').value;
+  const byName = (a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' });
+  const l = [...list];
+  if (mode === 'name') l.sort(byName);
+  else if (mode === 'time') l.sort((a, b) => (b.playtime - a.playtime) || (b.lastPlayed - a.lastPlayed) || byName(a, b));
+  else l.sort((a, b) => (b.lastPlayed - a.lastPlayed) || byName(a, b));
+  return l;
+}
+
+function render() {
+  const all = data.games.filter((g) => !g.hidden);
+  const hiddenCount = data.games.length - all.length;
+  $('#count').textContent = all.length ? `${all.length} jeu${all.length > 1 ? 'x' : ''}` : '';
+  $('#minimize').checked = !!data.minimizeOnLaunch;
+  $('#scan').classList.toggle('spin', !!data.scanning);
+  $('#scan span').textContent = data.scanning ? 'Recherche…' : 'Actualiser';
+  $('#hidden-info').innerHTML = hiddenCount
+    ? `${hiddenCount} jeu${hiddenCount > 1 ? 'x' : ''} masqué${hiddenCount > 1 ? 's' : ''} · <button class="link" data-act="unhide">Tout afficher</button>` : '';
+
+  // Filtres par plateforme (seulement celles présentes)
+  const counts = {};
+  for (const g of all) counts[g.source] = (counts[g.source] || 0) + 1;
+  const order = Object.keys(SOURCES).filter((s) => counts[s]);
+  if (filter !== 'all' && filter !== 'fav' && !counts[filter]) filter = 'all';
+  const favCount = all.filter((g) => g.favorite).length;
+  $('#filters').innerHTML = all.length ? [
+    `<button class="chip ${filter === 'all' ? 'on' : ''}" data-filter="all">Tous<span>${all.length}</span></button>`,
+    favCount ? `<button class="chip ${filter === 'fav' ? 'on' : ''}" data-filter="fav">★ Favoris<span>${favCount}</span></button>` : '',
+    ...order.map((s) => `<button class="chip ${filter === s ? 'on' : ''}" data-filter="${s}">${esc(SOURCES[s])}<span>${counts[s]}</span></button>`),
+  ].join('') : '';
+
+  const q = $('#q').value.trim().toLowerCase();
+  let list = all;
+  if (filter === 'fav') list = list.filter((g) => g.favorite);
+  else if (filter !== 'all') list = list.filter((g) => g.source === filter);
+  if (q) list = list.filter((g) => g.name.toLowerCase().includes(q));
+
+  const main = $('#main');
+  const scroll = main.scrollTop;
+  if (!data.games.length) {
+    main.innerHTML = data.scanning
+      ? '<div class="scanning"><i></i>Recherche des jeux installés sur ton PC…</div>'
+      : `<div class="empty"><b>Aucun jeu trouvé</b>PoseyHub cherche les jeux Steam, Epic Games, Riot, Battle.net, Xbox, GOG, Ubisoft, EA, HoYoverse, Roblox et Minecraft.<br>
+         Si un jeu manque, clique sur <b>Ajouter un jeu</b> et choisis son .exe ou son raccourci.</div>`;
+    return;
+  }
+
+  let html = '';
+  const browsing = !q && filter === 'all';
+  if (browsing) {
+    const recent = all.filter((g) => g.lastPlayed).sort((a, b) => b.lastPlayed - a.lastPlayed);
+    const top = recent[0];
+    if (top) {
+      const bg = top.cover || top.icon;
+      html += `<div class="hero" data-id="${esc(top.id)}" data-act="play">
+        ${bg ? `<div class="bg" style="background-image:url('${esc(bg)}')"></div>` : ''}
+        <div class="in"><div class="art card" style="pointer-events:none"><div class="art" style="margin:0">${art(top)}</div></div>
+          <div><div class="kicker">Reprendre</div><h3>${esc(top.name)}</h3>
+            <p>${esc([SOURCES[top.source], top.lastPlayed ? 'joué ' + ago(top.lastPlayed) : '', playtime(top.playtime)].filter(Boolean).join(' · '))}</p>
+            <button class="playbig" data-act="play">${I.play} Jouer</button></div></div></div>`;
+      const more = recent.slice(1, 9);
+      if (more.length) html += `<h2>Joués récemment</h2><div class="row">${more.map(card).join('')}</div>`;
+    }
+    const favs = sorted(all.filter((g) => g.favorite));
+    if (favs.length) html += `<h2>★ Favoris</h2><div class="row">${favs.map(card).join('')}</div>`;
+  }
+  const title = q ? `Résultats pour « ${esc(q)} »` : filter === 'fav' ? '★ Favoris' : filter === 'all' ? 'Tous les jeux' : esc(SOURCES[filter]);
+  html += `<h2>${title} <small>${list.length}</small></h2>`;
+  html += list.length ? `<div class="grid">${sorted(list).map(card).join('')}</div>`
+    : `<div class="empty">Aucun jeu ne correspond.</div>`;
+  if (data.scanning) html += '<div class="scanning"><i></i>Recherche de nouveaux jeux…</div>';
+  main.innerHTML = html;
+  main.scrollTop = scroll;
+}
+
+// ---------- actions ----------
+async function refresh() { data = await window.hubGames.list(); render(); }
+
+async function play(id, el) {
+  const cards = document.querySelectorAll(`.card[data-id="${CSS.escape(id)}"]`);
+  cards.forEach((c) => c.classList.add('launching'));
+  const r = await window.hubGames.launch(id);
+  setTimeout(() => cards.forEach((c) => c.classList.remove('launching')), 2500);
+  if (r.ok) toast(`${r.name} se lance…`);
+  else toast(r.error || 'Impossible de lancer ce jeu.', 6000);
+}
+
+function startRename(id) {
+  const c = document.querySelector(`#main .grid .card[data-id="${CSS.escape(id)}"]`) || document.querySelector(`.card[data-id="${CSS.escape(id)}"]`);
+  if (!c) return;
+  const g = data.games.find((x) => x.id === id);
+  c.classList.add('renaming');
+  const input = document.createElement('input');
+  input.value = g?.name || '';
+  c.querySelector('.meta').prepend(input);
+  input.focus(); input.select();
+  let done = false;
+  const finish = async (ok) => {
+    if (done) return; done = true;
+    if (ok && input.value.trim()) await window.hubGames.rename(id, input.value.trim());
+    await refresh();
+  };
+  input.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') finish(true); if (e.key === 'Escape') finish(false); });
+  input.addEventListener('blur', () => finish(true));
+  input.addEventListener('click', (e) => e.stopPropagation());
+}
+
+document.addEventListener('click', async (e) => {
+  const chip = e.target.closest('[data-filter]');
+  if (chip) { filter = chip.dataset.filter; render(); $('#main').scrollTop = 0; return; }
+  const actEl = e.target.closest('[data-act]');
+  const holder = e.target.closest('[data-id]');
+  const id = holder?.dataset.id;
+  const act = actEl?.dataset.act;
+  if (act === 'unhide') { await window.hubGames.unhideAll(); return; }
+  if (!id) return;
+  if (act === 'play') { e.stopPropagation(); play(id); }
+  else if (act === 'fav') { e.stopPropagation(); await window.hubGames.favorite(id); }
+  else if (act === 'more') { e.stopPropagation(); await window.hubGames.menu(id); }
+});
+document.addEventListener('dblclick', (e) => {
+  const c = e.target.closest('.card[data-id]');
+  if (c && !e.target.closest('button,input')) play(c.dataset.id);
+});
+document.addEventListener('contextmenu', (e) => {
+  const c = e.target.closest('[data-id]');
+  if (c) { e.preventDefault(); window.hubGames.menu(c.dataset.id); }
+});
+document.addEventListener('keydown', (e) => {
+  const c = document.activeElement?.closest?.('.card[data-id]');
+  if (c && e.key === 'Enter') play(c.dataset.id);
+  if (e.key === '/' && document.activeElement !== $('#q')) { e.preventDefault(); $('#q').focus(); }
+});
+
+$('#q').addEventListener('input', render);
+$('#q').addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { $('#q').value = ''; render(); }
+  if (e.key === 'Enter') { const first = $('#main .grid .card'); if (first) play(first.dataset.id); }
+});
+$('#sort').addEventListener('change', render);
+$('#scan').addEventListener('click', async () => { await window.hubGames.scan(); });
+$('#add').addEventListener('click', async () => {
+  const n = await window.hubGames.add();
+  if (n) toast(n > 1 ? `${n} jeux ajoutés` : 'Jeu ajouté');
+});
+$('#minimize').addEventListener('change', (e) => window.hubGames.setMinimize(e.target.checked));
+
+let pending = null;
+window.hubGames.onChanged(() => { clearTimeout(pending); pending = setTimeout(refresh, 120); });
+window.hubGames.onRenameRequest((id) => startRename(id));
+refresh();
+</script>
+</body>
+</html>

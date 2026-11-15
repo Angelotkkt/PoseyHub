@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PoseyHub : YouTube, Discord et Spotify dans une seule appli</title>
-<meta name="description" content="PoseyHub est une appli Windows gratuite qui réunit YouTube, Discord et Spotify dans une seule fenêtre. Par PoseyDevs.">
+<title>PoseyHub : YouTube, Discord, Spotify et tous tes jeux dans une seule appli</title>
+<meta name="description" content="PoseyHub est une appli Windows gratuite qui réunit YouTube, Discord, Spotify et tous tes jeux installés dans une seule fenêtre. Par PoseyDevs.">
 <link rel="icon" href="icone.png">
 <style>
   :root {
@@ -39,7 +39,7 @@
   /* ---------- héros */
   .heros { display: grid; grid-template-columns: 1fr 1.15fr; gap: 56px; align-items: center; padding: 48px 0 90px; }
   h1 { font: 700 clamp(44px, 6vw, 74px)/.98 var(--f-titre); letter-spacing: -1px; margin: 0 0 22px; }
-  h1 .r { color: var(--rouge); } h1 .b { color: var(--bleu); } h1 .v { color: var(--vert); }
+  h1 .r { color: var(--rouge); } h1 .b { color: var(--bleu); } h1 .v { color: var(--vert); } h1 .o { color: var(--or); }
   .heros p.intro { color: var(--brume); font-size: 19px; max-width: 32em; margin: 0 0 32px; }
   .boutons { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
   .telecharger { display: inline-flex; align-items: center; gap: 12px; padding: 16px 26px; border-radius: 14px;
@@ -91,7 +91,8 @@
   h2 { font: 700 clamp(32px, 4vw, 46px)/1.05 var(--f-titre); margin: 0 0 12px; }
   .chapeau { color: var(--brume); max-width: 40em; margin: 0 0 40px; }
 
-  .trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; padding-top: 30px; }
+  .trio { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; padding-top: 30px; }
+  @media (max-width: 1100px) { .trio { grid-template-columns: repeat(2, 1fr); row-gap: 60px; } }
   .service { --c: var(--brume); background: var(--encre); border-radius: 22px; padding: 26px 22px 22px; position: relative;
     border: 2px solid color-mix(in srgb, var(--c) 50%, var(--trait)); }
   .service:nth-child(odd) { transform: rotate(-1.2deg); } .service:nth-child(even) { transform: rotate(1deg); }
@@ -152,8 +153,8 @@
   <!-- ===== Héros ===== -->
   <div class="heros">
     <div>
-      <h1><span class="r">Vidéos</span>, <span class="b">potes</span> et <span class="v">musique</span>.<br>Une seule appli.</h1>
-      <p class="intro">PoseyHub réunit YouTube, Discord et Spotify dans une vraie appli Windows.
+      <h1><span class="r">Vidéos</span>, <span class="b">potes</span>, <span class="v">musique</span>, <span class="o">jeux</span>.<br>Une seule appli.</h1>
+      <p class="intro">PoseyHub réunit YouTube, Discord, Spotify et tous les jeux de ton PC dans une vraie appli Windows.
         Tu passes de l'un à l'autre en un clic, ta musique continue pendant que tu discutes, et tes notifications restent à portée de main.</p>
       <div class="boutons">
         <a class="telecharger" id="telecharger" href="#installer">
@@ -171,6 +172,7 @@
           <div class="f-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="4"/><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor"/></svg></div>
           <div class="f-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg><span class="pastille">3</span></div>
           <div class="f-ico on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></div>
+          <div class="f-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 7h9a5 5 0 0 1 4.9 6l-.8 3.8a2.4 2.4 0 0 1-4.1 1.1L14.4 16H9.6l-2.1 1.9a2.4 2.4 0 0 1-4.1-1.1L2.6 13a5 5 0 0 1 4.9-6z"/><path d="M8 10v4M6 12h4"/></svg></div>
         </div>
         <div class="f-main">
           <h4>Écoutés récemment</h4>
@@ -192,8 +194,8 @@
 
   <!-- ===== Services ===== -->
   <section id="services">
-    <h2>Trois applis, une seule fenêtre</h2>
-    <p class="chapeau">Une barre sur le côté, trois boutons. Chaque service garde ta connexion et continue de tourner quand tu changes d'onglet.</p>
+    <h2>Tout au même endroit</h2>
+    <p class="chapeau">Une barre sur le côté, quatre boutons. Chaque service garde ta connexion et continue de tourner quand tu changes d'onglet.</p>
     <div class="trio">
       <div class="service" style="--c: var(--rouge)">
         <div class="rond"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="4"/><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor"/></svg></div>
@@ -212,6 +214,13 @@
         <h3>Spotify</h3>
         <p>Un lecteur relié à ton compte par la connexion officielle de Spotify : playlists, recherche, appareils.</p>
         <span class="plus">Ctrl + 3</span>
+      </div>
+
+      <div class="service" style="--c: var(--or)">
+        <div class="rond"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 7h9a5 5 0 0 1 4.9 6l-.8 3.8a2.4 2.4 0 0 1-4.1 1.1L14.4 16H9.6l-2.1 1.9a2.4 2.4 0 0 1-4.1-1.1L2.6 13a5 5 0 0 1 4.9-6z"/><path d="M8 10v4M6 12h4"/><circle cx="15.5" cy="11" r=".9" fill="currentColor"/><circle cx="17.5" cy="13" r=".9" fill="currentColor"/></svg></div>
+        <h3>Jeux</h3>
+        <p>Tous les jeux de ton PC au même endroit : Steam, Epic, Riot, Battle.net, Xbox, GOG, Ubisoft, HoYoverse, Roblox… Un clic pour jouer.</p>
+        <span class="plus">Ctrl + 4</span>
       </div>
     </div>
   </section>

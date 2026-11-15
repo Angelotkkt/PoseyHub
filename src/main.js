@@ -12,6 +12,7 @@ const fs = require('fs');
 const { pathToFileURL } = require('url');
 const spotify = require('./spotify');
 const updater = require('./updater');
+const games = require('./games');
 
 function updateMenuItem() {
   const u = updater.state();
@@ -53,6 +54,14 @@ const SERVICES = [
     url: 'poseyhub://app/spotify.html',
     local: true,
     preload: 'spotifyPreload.js',
+    domains: [],
+  },
+  {
+    // Gaming Hub : tous les jeux installés sur le PC
+    id: 'games', name: 'Jeux', color: '#ffb020',
+    url: 'poseyhub://app/games.html',
+    local: true,
+    preload: 'gamesPreload.js',
     domains: [],
   },
 ];
@@ -169,6 +178,11 @@ function registerAppProtocol(ses) {
   if (ses.protocol.isProtocolHandled('poseyhub')) return;
   ses.protocol.handle('poseyhub', (request) => {
     const { pathname } = new URL(request.url);
+    // Images des jeux (jaquettes du cache Steam, logos Xbox) : seulement des fichiers trouvés par le scan
+    if (pathname.startsWith('/media/')) {
+      const media = games.mediaFile(decodeURIComponent(pathname.slice('/media/'.length)));
+      return media ? net.fetch(pathToFileURL(media).toString()) : new Response('', { status: 404 });
+    }
     const file = path.normalize(path.join(__dirname, decodeURIComponent(pathname)));
     if (!file.startsWith(__dirname + path.sep) || !/\.(html|js|css|png|svg)$/i.test(file)) {
       return new Response('Interdit', { status: 403 });
@@ -417,6 +431,67 @@ spotify.onChange((st) => {
 });
 
 // ---------------------------------------------------------------------------
+// Gaming Hub — seulement depuis la page Jeux de l'appli
+// ---------------------------------------------------------------------------
+const gamesWc = () => views.games?.view.webContents;
+const gHandle = (channel, fn) => ipcMain.handle(channel, (e, ...args) => {
+  if (e.sender !== gamesWc()) throw new Error('Accès refusé');
+  return fn(...args);
+});
+gHandle('games:list', () => games.list());
+gHandle('games:scan', () => games.scan().then(() => true));
+gHandle('games:launch', async (id) => {
+  try {
+    const r = await games.launch(String(id));
+    if (r.minimize && win && !win.isDestroyed()) setTimeout(() => win.minimize(), 600);
+    return { ok: true, name: r.name };
+  } catch (e) {
+    return { ok: false, error: e.message || 'Impossible de lancer ce jeu.' };
+  }
+});
+gHandle('games:favorite', (id) => games.toggleFavorite(String(id)));
+gHandle('games:rename', (id, name) => games.rename(String(id), name));
+gHandle('games:unhideAll', () => games.unhideAll());
+gHandle('games:setMinimize', (v) => games.setMinimize(v));
+gHandle('games:add', async () => {
+  const r = await dialog.showOpenDialog(win, {
+    title: 'Ajouter un jeu à PoseyHub',
+    buttonLabel: 'Ajouter',
+    properties: ['openFile', 'multiSelections'],
+    filters: [{ name: 'Jeux et raccourcis', extensions: ['exe', 'lnk', 'url', 'bat', 'cmd'] }],
+  });
+  return r.canceled ? 0 : games.addCustom(r.filePaths);
+});
+gHandle('games:menu', (id) => {
+  id = String(id);
+  const g = games.get(id);
+  if (!g) return;
+  games.list().then((l) => {
+    const info = l.games.find((x) => x.id === id) || {};
+    const folder = games.folderOf(id);
+    const t = [
+      { label: `Jouer à ${g.name}`, click: () => gamesWc()?.executeJavaScript(`play(${JSON.stringify(id)})`).catch(() => {}) },
+      { type: 'separator' },
+      { label: info.favorite ? 'Retirer des favoris' : 'Ajouter aux favoris', click: () => games.toggleFavorite(id) },
+      { label: 'Ouvrir le dossier du jeu', enabled: !!folder, click: () => shell.openPath(folder) },
+    ];
+    if (g.custom) {
+      t.push({ label: 'Renommer…', click: () => gamesWc()?.send('games:renameRequest', id) });
+      t.push({ type: 'separator' });
+      t.push({ label: 'Retirer de PoseyHub', click: () => games.removeCustom(id) });
+    } else {
+      t.push({ type: 'separator' });
+      t.push({ label: 'Masquer ce jeu', click: () => games.toggleHidden(id) });
+    }
+    Menu.buildFromTemplate(t).popup({ window: win });
+  });
+});
+games.onChange(() => {
+  const wc = gamesWc();
+  if (wc && !wc.isDestroyed()) wc.send('games:changed');
+});
+
+// ---------------------------------------------------------------------------
 // Menu réglages (roue crantée)
 // ---------------------------------------------------------------------------
 const exePath = () => process.env.PORTABLE_EXECUTABLE_FILE || process.execPath;
@@ -606,6 +681,8 @@ if (!app.requestSingleInstanceLock()) {
 
     loadSettings();
     spotify.init();
+    games.load(app.getPath('userData'));
+    setTimeout(() => games.scan().catch(() => {}), 4000); // recherche des jeux installés en arrière-plan
     createWindow();
     createTray();
     updater.init({

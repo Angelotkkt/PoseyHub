@@ -1,6 +1,6 @@
 # PoseyHub
 
-YouTube, Discord et Spotify dans une seule appli Windows, par **PoseyDevs**.
+YouTube, Discord, Spotify et tous tes jeux dans une seule appli Windows, par **PoseyDevs**.
 
 **Télécharger : https://angelotkkt.github.io/PoseyHub/**
 

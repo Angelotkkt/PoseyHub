@@ -1,6 +1,6 @@
 # PoseyHub — par PoseyDevs
 
-**YouTube, Discord et Spotify dans une seule appli Windows.**
+**YouTube, Discord, Spotify et tous tes jeux dans une seule appli Windows.**
 C'est une vraie appli de bureau (.exe) avec sa propre fenêtre. Pas besoin d'ouvrir un navigateur.
 
 **Télécharger l'appli toute prête : https://angelotkkt.github.io/PoseyHub/**
@@ -74,12 +74,29 @@ Clique sur **Informations complémentaires → Exécuter quand même**.
 
 | Touche | Action |
 |---|---|
-| `Ctrl+1` / `Ctrl+2` / `Ctrl+3` | YouTube / Discord / Spotify |
+| `Ctrl+1` / `Ctrl+2` / `Ctrl+3` / `Ctrl+4` | YouTube / Discord / Spotify / Jeux |
 | `Ctrl+Tab` | Service suivant |
 | `Ctrl+R` ou `F5` | Actualiser |
 | `Alt+←` / `Alt+→` | Page précédente / suivante |
 | `F11` | Plein écran |
 | `Ctrl+Shift+I` | Outils de développement |
+
+---
+
+## Jeux (Gaming Hub)
+
+L'onglet **Jeux** (`Ctrl+4`) trouve tout seul les jeux installés sur ton PC et les lance en un clic :
+**Steam** (avec les jaquettes et ton temps de jeu), **Epic Games**, **Riot** (VALORANT, LoL), **Battle.net** (Call of Duty…), **Xbox / Game Pass**, **GOG**, **Ubisoft Connect**, **EA**, **Rockstar**, **HoYoverse** (Genshin, Star Rail, ZZZ), **Roblox** et **Minecraft**.
+
+- **Reprendre :** ton dernier jeu en grand, puis les jeux joués récemment.
+- **Favoris :** clique sur l'étoile d'un jeu.
+- **Trouver un jeu :** recherche (touche `/`), filtres par plateforme, tri (récents, nom, temps de jeu).
+- **Jouer :** double-clic, touche `Entrée` ou bouton ▶.
+- **Clic droit :** favori, ouvrir le dossier du jeu, masquer.
+- **Ajouter un jeu :** si un jeu n'est pas trouvé, choisis son `.exe` ou son raccourci. Tu peux ensuite le renommer.
+- **Réduire PoseyHub quand un jeu se lance :** option en bas de la page.
+
+Tout se passe sur ton PC : PoseyHub lit les dossiers des launchers, le registre Windows et le cache local de Steam. Rien n'est envoyé sur Internet.
 
 ---
 

@@ -55,7 +55,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          NOTES="PoseyHub ${APP_VERSION} pour Windows 10 et 11 : YouTube, Discord et Spotify dans une seule appli.
+          NOTES="PoseyHub ${APP_VERSION} pour Windows 10 et 11 : YouTube, Discord, Spotify et tous tes jeux dans une seule appli.
 
           - PoseyHub-Setup.exe : installe PoseyHub (raccourci bureau, mises à jour automatiques)
           - PoseyHub-portable.exe : se lance sans installation
