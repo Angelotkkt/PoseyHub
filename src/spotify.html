@@ -186,8 +186,8 @@
 <!-- ===== Étape 1 : Client ID ===== -->
 <div id="screen-setup" class="screen hidden">
   <div class="setup">
-    <h1>Connecter Spotify à PoseyHub</h1>
-    <p class="lead">PoseyHub utilise la connexion officielle de Spotify. Il faut créer une fois une « appli » gratuite sur Spotify for Developers.
+    <h1>Connecter Spotify à Simply Hub</h1>
+    <p class="lead">Simply Hub utilise la connexion officielle de Spotify. Il faut créer une fois une « appli » gratuite sur Spotify for Developers.
       C'est rapide, et ça ne se fait qu'une seule fois.</p>
 
     <div class="step"><div class="n">1</div><div>
@@ -198,7 +198,7 @@
 
     <div class="step"><div class="n">2</div><div>
       <b>Clique sur « Create app » et remplis :</b>
-      <p>App name : <b>PoseyHub</b> · Description : ce que tu veux<br>
+      <p>App name : <b>Simply Hub</b> · Description : ce que tu veux<br>
         Redirect URI : copie exactement cette adresse puis clique sur « Add » :</p>
       <div class="code"><span id="redirect-uri">http://127.0.0.1:47823/callback</span><button class="btn small" data-act="copy-redirect">Copier</button></div>
       <p>Dans « Which API/SDKs are you planning to use? », coche <b>Web API</b> et <b>Web Playback SDK</b>, accepte les conditions puis clique sur <b>Save</b>.</p>
@@ -244,7 +244,7 @@
   <main id="main">
     <div class="head">
       <div class="grow"></div>
-      <button class="chip" id="sdk-chip" data-act="devices" title="Lecteur intégré PoseyHub"><i></i><span>Lecteur PoseyHub…</span></button>
+      <button class="chip" id="sdk-chip" data-act="devices" title="Lecteur intégré Simply Hub"><i></i><span>Lecteur Simply Hub…</span></button>
       <button class="me" id="me" data-act="account"><span class="av">?</span><span>…</span></button>
     </div>
     <div id="page"></div>
@@ -739,7 +739,7 @@ async function targetDevice() {
 async function play(body) {
   const device = await targetDevice();
   if (!device) {
-    toast('Aucun appareil disponible : ouvre l\'appli Spotify officielle (ordi ou téléphone), ou attends que le lecteur PoseyHub soit prêt.', 6500);
+    toast('Aucun appareil disponible : ouvre l\'appli Spotify officielle (ordi ou téléphone), ou attends que le lecteur Simply Hub soit prêt.', 6500);
     openDevices();
     return;
   }
@@ -863,7 +863,7 @@ async function openDevices(anchor) {
   const items = devices.map((d) => `
     <button class="item ${d.is_active ? 'active' : ''}" data-act="transfer" data-id="${esc(d.id)}" ${d.is_restricted ? 'disabled' : ''}>
       ${d.id === sdk.id ? I.note : devIcon(d.type)}
-      <span><b>${esc(d.id === sdk.id ? 'PoseyHub (cette appli)' : d.name)}</b>
+      <span><b>${esc(d.id === sdk.id ? 'Simply Hub (cette appli)' : d.name)}</b>
       <small>${d.is_active ? 'En cours de lecture' : esc(d.type || '')}${d.is_restricted ? ' · ne peut pas être contrôlé' : ''}</small></span></button>`).join('');
   pop.innerHTML = `
     <h3>Où écouter ?</h3>
@@ -871,7 +871,7 @@ async function openDevices(anchor) {
     ${items || `<div class="sub">${esc(r.ok ? 'Aucun appareil trouvé.' : r.error)}</div>`}
     <hr>
     <button class="item" data-act="open" data-what="app">${I.computer}<span><b>Ouvrir l'appli Spotify officielle</b><small>Puis rouvre ce menu pour la choisir</small></span></button>
-    <div class="sub" style="padding-top:8px">Lecteur intégré PoseyHub : ${esc(sdk.label)}</div>`;
+    <div class="sub" style="padding-top:8px">Lecteur intégré Simply Hub : ${esc(sdk.label)}</div>`;
   placePop(anchor, anchor.id === 'dev-btn');
 }
 
@@ -892,20 +892,20 @@ function openAccount(anchor) {
 }
 
 // ===========================================================================
-// Lecteur intégré (Web Playback SDK) : PoseyHub devient un appareil Spotify
+// Lecteur intégré (Web Playback SDK) : Simply Hub devient un appareil Spotify
 // ===========================================================================
 const sdk = { player: null, id: null, state: 'loading', label: 'chargement…' };
 function setSdk(state, label) {
   sdk.state = state; sdk.label = label;
   const chip = $('#sdk-chip');
   chip.className = 'chip ' + (state === 'ok' ? 'ok' : state === 'error' ? 'error' : state === 'warn' ? 'warn' : '');
-  chip.querySelector('span').textContent = state === 'ok' ? 'Lecteur PoseyHub prêt' : state === 'error' ? 'Lecteur PoseyHub indisponible' : 'Lecteur PoseyHub…';
+  chip.querySelector('span').textContent = state === 'ok' ? 'Lecteur Simply Hub prêt' : state === 'error' ? 'Lecteur Simply Hub indisponible' : 'Lecteur Simply Hub…';
   chip.title = label;
 }
 
 window.onSpotifyWebPlaybackSDKReady = () => {
   const player = new Spotify.Player({
-    name: 'PoseyHub',
+    name: 'Simply Hub',
     getOAuthToken: (cb) => { window.sp.token().then((t) => { if (t) cb(t); }); },
     volume: 0.6,
   });
@@ -914,8 +914,8 @@ window.onSpotifyWebPlaybackSDKReady = () => {
   player.addListener('not_ready', () => { setSdk('warn', 'hors ligne, reconnexion…'); });
   player.addListener('initialization_error', ({ message }) => setSdk('error', 'non pris en charge (' + message + '). Utilise l\'appli Spotify officielle comme appareil.'));
   player.addListener('authentication_error', ({ message }) => setSdk('error', 'erreur de connexion (' + message + ')'));
-  player.addListener('account_error', () => setSdk('error', 'Spotify Premium requis pour écouter dans PoseyHub. Tu peux quand même piloter l\'appli Spotify officielle.'));
-  player.addListener('playback_error', ({ message }) => toast('Lecture impossible dans PoseyHub (' + message + '). Choisis l\'appli Spotify officielle comme appareil.', 7000));
+  player.addListener('account_error', () => setSdk('error', 'Spotify Premium requis pour écouter dans Simply Hub. Tu peux quand même piloter l\'appli Spotify officielle.'));
+  player.addListener('playback_error', ({ message }) => toast('Lecture impossible dans Simply Hub (' + message + '). Choisis l\'appli Spotify officielle comme appareil.', 7000));
   player.addListener('player_state_changed', () => refreshSoon(200));
   player.connect().then((ok) => { if (!ok) setSdk('error', 'connexion au lecteur impossible'); });
 };

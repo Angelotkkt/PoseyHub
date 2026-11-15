@@ -130,7 +130,7 @@
   <div class="filters" id="filters"></div>
   <main id="main"></main>
   <footer class="foot">
-    <label><input type="checkbox" id="minimize"> Réduire PoseyHub quand un jeu se lance</label>
+    <label><input type="checkbox" id="minimize"> Réduire Simply Hub quand un jeu se lance</label>
     <span class="grow"></span>
     <span id="hidden-info"></span>
     <span>Double-clic ou Entrée pour jouer · clic droit pour plus d'options</span>
@@ -250,7 +250,7 @@ function render() {
   if (!data.games.length) {
     main.innerHTML = data.scanning
       ? '<div class="scanning"><i></i>Recherche des jeux installés sur ton PC…</div>'
-      : `<div class="empty"><b>Aucun jeu trouvé</b>PoseyHub cherche les jeux Steam, Epic Games, Riot, Battle.net, Xbox, GOG, Ubisoft, EA, HoYoverse, Roblox et Minecraft.<br>
+      : `<div class="empty"><b>Aucun jeu trouvé</b>Simply Hub cherche les jeux Steam, Epic Games, Riot, Battle.net, Xbox, GOG, Ubisoft, EA, HoYoverse, Roblox et Minecraft.<br>
          Si un jeu manque, clique sur <b>Ajouter un jeu</b> et choisis son .exe ou son raccourci.</div>`;
     return;
   }

@@ -5,6 +5,6 @@ const { execSync } = require('child_process');
 
 exports.default = async function afterPack(context) {
   if (process.env.POSEYHUB_VMP !== '1') return;
-  console.log('[PoseyHub] Signature VMP de', context.appOutDir);
+  console.log('[Simply Hub] Signature VMP de', context.appOutDir);
   execSync(`python -m castlabs_evs.vmp sign-pkg "${context.appOutDir}"`, { stdio: 'inherit' });
 };

@@ -1,6 +1,6 @@
 'use strict';
 /*
- * PoseyHub — YouTube, Discord et Spotify dans une seule appli de bureau.
+ * Simply Hub — YouTube, Discord et Spotify dans une seule appli de bureau.
  * PoseyDevs
  */
 const {
@@ -20,6 +20,15 @@ function updateMenuItem() {
   if (u.status === 'downloading') return { label: `Téléchargement de la mise à jour… ${u.percent ? u.percent + ' %' : ''}`, enabled: false };
   if (u.status === 'checking') return { label: 'Recherche de mises à jour…', enabled: false };
   return { label: 'Rechercher des mises à jour', click: () => updater.check(true) };
+}
+
+// Données de l'appli : l'ancien nom était « PoseyHub ». Si ce dossier existe déjà,
+// on continue de l'utiliser pour garder les connexions, réglages et jeux.
+{
+  const appData = app.getPath('appData');
+  const oldDir = path.join(appData, 'PoseyHub');
+  const newDir = path.join(appData, 'Simply Hub');
+  app.setPath('userData', !fs.existsSync(newDir) && fs.existsSync(oldDir) ? oldDir : newDir);
 }
 
 // Protocole interne poseyhub:// pour les pages de l'appli (lecteur Spotify)
@@ -83,7 +92,7 @@ app.userAgentFallback = CHROME_UA;
 app.setAppUserModelId('com.poseydevs.poseyhub');
 
 // ---------------------------------------------------------------------------
-// Réglages (sauvegardés dans %APPDATA%/PoseyHub/settings.json)
+// Réglages (sauvegardés dans %APPDATA%/Simply Hub/settings.json)
 // ---------------------------------------------------------------------------
 const settings = {
   lastService: 'youtube',
@@ -455,7 +464,7 @@ gHandle('games:unhideAll', () => games.unhideAll());
 gHandle('games:setMinimize', (v) => games.setMinimize(v));
 gHandle('games:add', async () => {
   const r = await dialog.showOpenDialog(win, {
-    title: 'Ajouter un jeu à PoseyHub',
+    title: 'Ajouter un jeu à Simply Hub',
     buttonLabel: 'Ajouter',
     properties: ['openFile', 'multiSelections'],
     filters: [{ name: 'Jeux et raccourcis', extensions: ['exe', 'lnk', 'url', 'bat', 'cmd'] }],
@@ -478,7 +487,7 @@ gHandle('games:menu', (id) => {
     if (g.custom) {
       t.push({ label: 'Renommer…', click: () => gamesWc()?.send('games:renameRequest', id) });
       t.push({ type: 'separator' });
-      t.push({ label: 'Retirer de PoseyHub', click: () => games.removeCustom(id) });
+      t.push({ label: 'Retirer de Simply Hub', click: () => games.removeCustom(id) });
     } else {
       t.push({ type: 'separator' });
       t.push({ label: 'Masquer ce jeu', click: () => games.toggleHidden(id) });
@@ -511,7 +520,7 @@ function showSettingsMenu() {
       click: (m) => { settings.alwaysOnTop = m.checked; win.setAlwaysOnTop(m.checked); saveSettings(); },
     },
     {
-      label: 'Lancer PoseyHub au démarrage de Windows',
+      label: 'Lancer Simply Hub au démarrage de Windows',
       type: 'checkbox', checked: login.openAtLogin,
       click: (m) => app.setLoginItemSettings({ openAtLogin: m.checked, path: exePath(), args: ['--hidden'] }),
     },
@@ -519,18 +528,18 @@ function showSettingsMenu() {
     { label: `Se déconnecter de ${service.name}…`, click: () => logout(service) },
     { label: `Outils de développement (${service.name})`, click: () => activeWc()?.openDevTools({ mode: 'detach' }) },
     { type: 'separator' },
-    { label: `PoseyHub ${app.getVersion()} — par PoseyDevs`, enabled: false },
+    { label: `Simply Hub ${app.getVersion()} — par PoseyDevs`, enabled: false },
     updateMenuItem(),
-    { label: 'Site de PoseyHub', click: () => shell.openExternal(updater.SITE) },
+    { label: 'Site de Simply Hub', click: () => shell.openExternal(updater.SITE) },
     { type: 'separator' },
-    { label: 'Quitter PoseyHub', click: quitApp },
+    { label: 'Quitter Simply Hub', click: quitApp },
   ]).popup({ window: win, x: 8, y: win.getContentBounds().height - 8 });
 }
 
 async function logout(service) {
   const { response } = await dialog.showMessageBox(win, {
     type: 'question', buttons: ['Se déconnecter', 'Annuler'], defaultId: 1, cancelId: 1,
-    title: 'PoseyHub', message: `Se déconnecter de ${service.name} ?`,
+    title: 'Simply Hub', message: `Se déconnecter de ${service.name} ?`,
     detail: 'Les cookies et données de connexion de ce service seront effacés.',
   });
   if (response !== 0) return;
@@ -553,7 +562,7 @@ function updateUnread() {
     if (!badgeImage) badgeImage = nativeImage.createFromPath(path.join(ASSETS, 'badge.png'));
     win.setOverlayIcon(parts.length ? badgeImage : null, parts.length ? 'Messages non lus' : '');
   }
-  tray?.setToolTip(parts.length ? `PoseyHub\n${parts.join('\n')}` : 'PoseyHub');
+  tray?.setToolTip(parts.length ? `Simply Hub\n${parts.join('\n')}` : 'Simply Hub');
 }
 
 // ---------------------------------------------------------------------------
@@ -565,9 +574,9 @@ function spotifyCommand(action) {
 
 function createTray() {
   tray = new Tray(nativeImage.createFromPath(path.join(ASSETS, 'tray.png')));
-  tray.setToolTip('PoseyHub');
+  tray.setToolTip('Simply Hub');
   tray.setContextMenu(Menu.buildFromTemplate([
-    { label: 'Afficher PoseyHub', click: showWindow },
+    { label: 'Afficher Simply Hub', click: showWindow },
     { type: 'separator' },
     ...SERVICES.map((s, i) => ({ label: `${s.name}\tCtrl+${i + 1}`, click: () => { showWindow(); switchTo(s.id); } })),
     { type: 'separator' },
@@ -575,7 +584,7 @@ function createTray() {
     { label: 'Spotify : titre suivant', click: () => spotifyCommand('next') },
     { label: 'Spotify : titre précédent', click: () => spotifyCommand('previous') },
     { type: 'separator' },
-    { label: 'Quitter PoseyHub', click: quitApp },
+    { label: 'Quitter Simply Hub', click: quitApp },
   ]));
   tray.on('click', () => (win.isVisible() && win.isFocused() ? win.hide() : showWindow()));
 }
@@ -608,7 +617,7 @@ function createWindow() {
     height: b?.height || 800,
     x: b?.x, y: b?.y,
     minWidth: 820, minHeight: 520,
-    title: 'PoseyHub',
+    title: 'Simply Hub',
     icon: ICON,
     backgroundColor: BG,
     show: false,
@@ -650,7 +659,7 @@ function createWindow() {
         settings.trayHintShown = true;
         saveSettings();
         tray.displayBalloon({
-          iconType: 'info', title: 'PoseyHub tourne toujours',
+          iconType: 'info', title: 'Simply Hub tourne toujours',
           content: 'Ta musique et tes notifications continuent. Clic droit sur l’icône pour quitter.',
         });
       }
@@ -671,12 +680,12 @@ if (!app.requestSingleInstanceLock()) {
     if (components && typeof components.whenReady === 'function') {
       try {
         await components.whenReady();
-        console.log('[PoseyHub] Composants DRM :', components.status());
+        console.log('[Simply Hub] Composants DRM :', components.status());
       } catch (err) {
-        console.warn('[PoseyHub] Widevine indisponible :', err);
+        console.warn('[Simply Hub] Widevine indisponible :', err);
       }
     } else {
-      console.warn('[PoseyHub] Electron sans Widevine : Spotify ne pourra pas lire la musique.');
+      console.warn('[Simply Hub] Electron sans Widevine : Spotify ne pourra pas lire la musique.');
     }
 
     loadSettings();
@@ -689,7 +698,7 @@ if (!app.requestSingleInstanceLock()) {
       window: () => win,
       prepareQuit: () => { quitting = true; },
       changed: (u) => {
-        if (u.status === 'ready') tray?.setToolTip(`PoseyHub — mise à jour ${u.version} prête`);
+        if (u.status === 'ready') tray?.setToolTip(`Simply Hub — mise à jour ${u.version} prête`);
       },
     });
 

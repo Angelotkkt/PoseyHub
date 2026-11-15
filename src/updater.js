@@ -1,7 +1,7 @@
 'use strict';
 /*
  * Mises à jour automatiques, comme pour AMS :
- * GitHub fabrique le nouveau PoseyHub-Setup.exe et le met dans la publication « windows »
+ * GitHub fabrique le nouveau SimplyHub-Setup.exe et le met dans la publication « windows »
  * de https://github.com/Angelotkkt/PoseyHub. L'appli le voit, le télécharge en arrière-plan
  * et l'installe toute seule à la prochaine fermeture (pas besoin de désinstaller).
  * La version « portable » ne peut pas se remplacer elle-même : elle prévient juste qu'il y a du nouveau.
@@ -42,7 +42,7 @@ function notify(title, body, onClick) {
 
 function info(message, detail) {
   const win = getWindow();
-  const opts = { type: 'info', title: 'PoseyHub', message, detail, buttons: ['OK'] };
+  const opts = { type: 'info', title: 'Simply Hub', message, detail, buttons: ['OK'] };
   return win ? dialog.showMessageBox(win, opts) : dialog.showMessageBox(opts);
 }
 
@@ -55,19 +55,19 @@ async function checkPortable() {
     const version = (/^version:\s*['"]?([^\s'"]+)/m.exec(await r.text()) || [])[1];
     if (version && newer(version, app.getVersion())) {
       set('available', { version });
-      notify('Nouvelle version de PoseyHub', `La version ${version} est sortie. Clique pour la télécharger.`, () => shell.openExternal(SITE));
+      notify('Nouvelle version de Simply Hub', `La version ${version} est sortie. Clique pour la télécharger.`, () => shell.openExternal(SITE));
       if (manualCheck) {
         const win = getWindow();
         const { response } = await dialog.showMessageBox(win, {
-          type: 'info', title: 'PoseyHub', buttons: ['Ouvrir le site', 'Plus tard'], defaultId: 0, cancelId: 1,
-          message: `PoseyHub ${version} est disponible.`,
+          type: 'info', title: 'Simply Hub', buttons: ['Ouvrir le site', 'Plus tard'], defaultId: 0, cancelId: 1,
+          message: `Simply Hub ${version} est disponible.`,
           detail: 'Tu utilises la version portable : télécharge la nouvelle version sur le site.',
         });
         if (response === 0) shell.openExternal(SITE);
       }
     } else {
       set('uptodate');
-      if (manualCheck) info('PoseyHub est à jour.', `Version ${app.getVersion()}`);
+      if (manualCheck) info('Simply Hub est à jour.', `Version ${app.getVersion()}`);
     }
   } catch (e) {
     set('error', { error: e.message });
@@ -88,19 +88,19 @@ function setupAutoUpdater() {
   autoUpdater.on('download-progress', (p) => set('downloading', { percent: Math.round(p.percent || 0) }));
   autoUpdater.on('update-not-available', () => {
     set('uptodate');
-    if (manualCheck) info('PoseyHub est à jour.', `Version ${app.getVersion()}`);
+    if (manualCheck) info('Simply Hub est à jour.', `Version ${app.getVersion()}`);
     manualCheck = false;
   });
   autoUpdater.on('update-downloaded', async (i) => {
     set('ready', { version: i.version });
-    notify('Mise à jour de PoseyHub prête',
-      `La version ${i.version} s'installera quand tu quitteras PoseyHub. Clique pour redémarrer maintenant.`,
+    notify('Mise à jour de Simply Hub prête',
+      `La version ${i.version} s'installera quand tu quitteras Simply Hub. Clique pour redémarrer maintenant.`,
       () => installNow());
     if (manualCheck) {
       const win = getWindow();
       const { response } = await dialog.showMessageBox(win, {
-        type: 'info', title: 'PoseyHub', buttons: ['Redémarrer maintenant', 'Plus tard'], defaultId: 0, cancelId: 1,
-        message: `PoseyHub ${i.version} est prêt à être installé.`,
+        type: 'info', title: 'Simply Hub', buttons: ['Redémarrer maintenant', 'Plus tard'], defaultId: 0, cancelId: 1,
+        message: `Simply Hub ${i.version} est prêt à être installé.`,
       });
       if (response === 0) installNow();
     }

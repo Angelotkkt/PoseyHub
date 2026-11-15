@@ -115,10 +115,10 @@ function resetAll() {
 // ---------------------------------------------------------------------------
 function callbackPage(ok, message) {
   const color = ok ? '#1ed760' : '#f23f43';
-  const title = ok ? 'PoseyHub est connecté à Spotify' : 'Connexion à Spotify impossible';
-  const text = ok ? 'Tu peux fermer cet onglet et retourner sur PoseyHub.' : message;
+  const title = ok ? 'Simply Hub est connecté à Spotify' : 'Connexion à Spotify impossible';
+  const text = ok ? 'Tu peux fermer cet onglet et retourner sur Simply Hub.' : message;
   const safe = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>PoseyHub</title>
+  return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Simply Hub</title>
 <style>body{margin:0;height:100vh;display:grid;place-items:center;background:#0f0f14;color:#e8e8f0;font-family:Segoe UI,system-ui,sans-serif;text-align:center}
 .dot{width:64px;height:64px;border-radius:50%;background:${color};margin:0 auto 20px;display:grid;place-items:center;font-size:34px;color:#0f0f14;font-weight:800}
 p{color:#8a8a9a}</style></head><body><div><div class="dot">${ok ? '✓' : '!'}</div>

@@ -1,10 +1,10 @@
-# PoseyHub — par PoseyDevs
+# Simply Hub — par PoseyDevs
 
 **YouTube, Discord, Spotify et tous tes jeux dans une seule appli Windows.**
 C'est une vraie appli de bureau (.exe) avec sa propre fenêtre. Pas besoin d'ouvrir un navigateur.
 
 **Télécharger l'appli toute prête : https://angelotkkt.github.io/PoseyHub/**
-Chaque modification envoyée sur GitHub fabrique automatiquement un nouveau `.exe`. Les PoseyHub déjà installés se mettent à jour tout seuls.
+Chaque modification envoyée sur GitHub fabrique automatiquement un nouveau `.exe`. Les Simply Hub déjà installés se mettent à jour tout seuls.
 La suite de ce fichier explique comment fabriquer l'appli toi-même sur ton PC.
 
 ---
@@ -12,11 +12,11 @@ La suite de ce fichier explique comment fabriquer l'appli toi-même sur ton PC.
 ## Créer le .exe (une seule fois)
 
 1. Installe **Node.js** (version **LTS**) depuis https://nodejs.org si tu ne l'as pas déjà.
-2. Dézippe le dossier `PoseyHub`.
+2. Dézippe le dossier `Simply Hub`.
 3. Double-clique sur **`CREER-LE-EXE.bat`**.
 4. Attends quelques minutes. Le dossier `dist` s'ouvre ensuite tout seul avec :
-   - **`PoseyHub-portable.exe`** : se lance directement, sans installation (tu peux le mettre sur une clé USB).
-   - **`PoseyHub-Setup.exe`** : installe l'appli avec un raccourci sur le bureau et dans le menu Démarrer.
+   - **`SimplyHub-portable.exe`** : se lance directement, sans installation (tu peux le mettre sur une clé USB).
+   - **`SimplyHub-Setup.exe`** : installe l'appli avec un raccourci sur le bureau et dans le menu Démarrer.
 
 > Pour essayer l'appli avant de créer le .exe : `TESTER-SANS-COMPILER.bat`.
 
@@ -24,17 +24,17 @@ La suite de ce fichier explique comment fabriquer l'appli toi-même sur ton PC.
 
 ## Spotify : connexion officielle
 
-L'onglet Spotify n'affiche pas le site de Spotify. C'est un **lecteur PoseyHub** relié à ton compte par la **connexion officielle de Spotify** (Spotify for Developers / Web API).
+L'onglet Spotify n'affiche pas le site de Spotify. C'est un **lecteur Simply Hub** relié à ton compte par la **connexion officielle de Spotify** (Spotify for Developers / Web API).
 À la première ouverture, l'onglet t'explique tout, étape par étape :
 
 1. Sur https://developer.spotify.com/dashboard, clique sur **Create app**.
 2. Redirect URI : `http://127.0.0.1:47823/callback`. Coche **Web API** et **Web Playback SDK**, puis enregistre.
-3. Colle le **Client ID** dans PoseyHub, puis clique sur **Se connecter avec Spotify**. La page de connexion officielle s'ouvre dans ton navigateur. Tu acceptes, et c'est fini.
+3. Colle le **Client ID** dans Simply Hub, puis clique sur **Se connecter avec Spotify**. La page de connexion officielle s'ouvre dans ton navigateur. Tu acceptes, et c'est fini.
 
 Ce que tu peux faire ensuite :
 - **Pages :** accueil (écoutés récemment, tes playlists, tes titres du moment), recherche, bibliothèque, playlists, albums et artistes.
 - **Lecture :** play/pause, suivant, précédent, aléatoire, répétition, avancer dans le titre, volume, et bouton ♥ pour liker un titre.
-- **Choix de l'appareil** (Spotify Connect) : PoseyHub lui-même, l'**appli Spotify officielle** sur ton PC, ton téléphone, une enceinte…
+- **Choix de l'appareil** (Spotify Connect) : Simply Hub lui-même, l'**appli Spotify officielle** sur ton PC, ton téléphone, une enceinte…
 - **Depuis l'icône près de l'horloge :** lecture/pause, suivant, précédent.
 
 **Règles de Spotify à connaître :**
@@ -43,10 +43,10 @@ Ce que tu peux faire ensuite :
 - Pour contrôler la lecture, il faut aussi Premium.
 - Pour les playlists que tu suis sans les avoir créées, Spotify ne donne pas la liste des titres. Tu peux quand même les lancer.
 
-**Si « Lecteur PoseyHub indisponible » s'affiche :** le lecteur intégré de Spotify n'est pas officiellement prévu pour les applis de bureau, donc il peut parfois refuser de marcher.
-Dans ce cas, clique sur l'appareil en bas à droite, puis sur **Ouvrir l'appli Spotify officielle**, et choisis-la. PoseyHub la pilote alors à distance.
+**Si « Lecteur Simply Hub indisponible » s'affiche :** le lecteur intégré de Spotify n'est pas officiellement prévu pour les applis de bureau, donc il peut parfois refuser de marcher.
+Dans ce cas, clique sur l'appareil en bas à droite, puis sur **Ouvrir l'appli Spotify officielle**, et choisis-la. Simply Hub la pilote alors à distance.
 
-Les identifiants de connexion sont chiffrés avec le coffre de Windows, dans `%APPDATA%\PoseyHub\spotify.json`.
+Les identifiants de connexion sont chiffrés avec le coffre de Windows, dans `%APPDATA%\Simply Hub\spotify.json`.
 
 Windows SmartScreen peut afficher « Windows a protégé votre ordinateur », parce que l'appli n'est pas signée.
 Clique sur **Informations complémentaires → Exécuter quand même**.
@@ -94,16 +94,16 @@ L'onglet **Jeux** (`Ctrl+4`) trouve tout seul les jeux installés sur ton PC et 
 - **Jouer :** double-clic, touche `Entrée` ou bouton ▶.
 - **Clic droit :** favori, ouvrir le dossier du jeu, masquer.
 - **Ajouter un jeu :** si un jeu n'est pas trouvé, choisis son `.exe` ou son raccourci. Tu peux ensuite le renommer.
-- **Réduire PoseyHub quand un jeu se lance :** option en bas de la page.
+- **Réduire Simply Hub quand un jeu se lance :** option en bas de la page.
 
-Tout se passe sur ton PC : PoseyHub lit les dossiers des launchers, le registre Windows et le cache local de Steam. Rien n'est envoyé sur Internet.
+Tout se passe sur ton PC : Simply Hub lit les dossiers des launchers, le registre Windows et le cache local de Steam. Rien n'est envoyé sur Internet.
 
 ---
 
 ## Problèmes possibles
 
-### Le lecteur intégré PoseyHub ne lit pas la musique
-Le lecteur intégré utilise une protection anti-copie appelée Widevine. PoseyHub utilise la version d'Electron de **castLabs**, qui la contient.
+### Le lecteur intégré Simply Hub ne lit pas la musique
+Le lecteur intégré utilise une protection anti-copie appelée Widevine. Simply Hub utilise la version d'Electron de **castLabs**, qui la contient.
 La solution la plus simple est de choisir l'**appli Spotify officielle** comme appareil (en bas à droite).
 Tu peux aussi essayer la *signature VMP* gratuite de castLabs, parce que l'exe compilé n'est pas signé :
 
@@ -122,7 +122,7 @@ npm run dist
 ⚙️ Réglages (en bas à gauche) → **Se déconnecter de …**
 
 ### Quitter complètement l'appli
-Clic droit sur l'icône près de l'horloge → **Quitter PoseyHub**.
+Clic droit sur l'icône près de l'horloge → **Quitter Simply Hub**.
 Tu peux aussi décocher « Garder ouvert dans la zone de notification » dans ⚙️ Réglages.
 
 ---
@@ -136,4 +136,4 @@ Tout se règle dans `src/main.js` :
   Tu peux y mettre ton logo PoseyDevs.
 - **Changer le nom ou la version** : `productName` et `version` dans `package.json`.
 
-Les données de l'appli (connexions, réglages) sont stockées dans `%APPDATA%\PoseyHub`.
+Les données de l'appli (connexions, réglages) sont stockées dans `%APPDATA%\Simply Hub`.

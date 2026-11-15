@@ -1,8 +1,8 @@
 name: Programme Windows
 
-# Fabrique PoseyHub-Setup.exe et PoseyHub-portable.exe sur un PC Windows de GitHub,
+# Fabrique SimplyHub-Setup.exe et SimplyHub-portable.exe sur un PC Windows de GitHub,
 # et les met dans la publication « windows » : le site les propose au téléchargement,
-# et PoseyHub s'en sert pour se mettre à jour tout seul (fichier latest.yml).
+# et Simply Hub s'en sert pour se mettre à jour tout seul (fichier latest.yml).
 # Chaque fabrication reçoit un nouveau numéro de version : 1.0.<numéro de fabrication>.
 on:
   push:
@@ -47,7 +47,7 @@ jobs:
         run: |
           npx electron-builder --win --x64 --publish never 2>&1 | tee -a journal-windows.txt
           ls -la dist | tee -a journal-windows.txt
-          test -f dist/PoseyHub-Setup.exe || { echo "PoseyHub-Setup.exe n'a pas été fabriqué"; exit 1; }
+          test -f dist/SimplyHub-Setup.exe || { echo "SimplyHub-Setup.exe n'a pas été fabriqué"; exit 1; }
           test -f dist/latest.yml || { echo "latest.yml manquant"; exit 1; }
 
       - name: Publication
@@ -55,17 +55,19 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          NOTES="PoseyHub ${APP_VERSION} pour Windows 10 et 11 : YouTube, Discord, Spotify et tous tes jeux dans une seule appli.
+          NOTES="Simply Hub ${APP_VERSION} pour Windows 10 et 11 : YouTube, Discord, Spotify et tous tes jeux dans une seule appli.
 
-          - PoseyHub-Setup.exe : installe PoseyHub (raccourci bureau, mises à jour automatiques)
-          - PoseyHub-portable.exe : se lance sans installation
+          - SimplyHub-Setup.exe : installe Simply Hub (raccourci bureau, mises à jour automatiques)
+          - SimplyHub-portable.exe : se lance sans installation
 
           Site : https://angelotkkt.github.io/PoseyHub/"
-          gh release view windows >/dev/null 2>&1 || gh release create windows --title "PoseyHub pour Windows" --notes "$NOTES" --latest
-          gh release edit windows --title "PoseyHub ${APP_VERSION} pour Windows" --notes "$NOTES"
+          gh release view windows >/dev/null 2>&1 || gh release create windows --title "Simply Hub pour Windows" --notes "$NOTES" --latest
+          gh release edit windows --title "Simply Hub ${APP_VERSION} pour Windows" --notes "$NOTES"
           # Les .exe d'abord, latest.yml en dernier : les applis ne voient la nouvelle version qu'une fois les fichiers en ligne
-          gh release upload windows dist/PoseyHub-Setup.exe dist/PoseyHub-Setup.exe.blockmap dist/PoseyHub-portable.exe --clobber
+          gh release upload windows dist/SimplyHub-Setup.exe dist/SimplyHub-Setup.exe.blockmap dist/SimplyHub-portable.exe --clobber
           gh release upload windows dist/latest.yml journal-windows.txt --clobber
+          # Anciens fichiers de l'époque « PoseyHub »
+          for f in PoseyHub-Setup.exe PoseyHub-Setup.exe.blockmap PoseyHub-portable.exe; do gh release delete-asset windows "$f" -y 2>/dev/null || true; done
 
       - name: Journal en cas d'échec
         if: failure()

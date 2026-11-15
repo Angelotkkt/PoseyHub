@@ -1,5 +1,5 @@
 @echo off
-title PoseyHub - Test
+title Simply Hub - Test
 cd /d "%~dp0"
 
 where node >nul 2>nul
@@ -16,7 +16,7 @@ if not exist node_modules (
   if errorlevel 1 goto :error
 )
 
-echo Lancement de PoseyHub...
+echo Lancement de Simply Hub...
 call npm start
 exit /b 0
 

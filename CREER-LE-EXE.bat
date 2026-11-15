@@ -1,10 +1,10 @@
 @echo off
-title PoseyHub - Creation du .exe
+title Simply Hub - Creation du .exe
 cd /d "%~dp0"
 
 echo.
 echo  ============================================
-echo     PoseyHub - par PoseyDevs
+echo     Simply Hub - par PoseyDevs
 echo     Creation de l'application Windows (.exe)
 echo  ============================================
 echo.
@@ -28,8 +28,8 @@ echo.
 echo  ============================================
 echo   TERMINE !
 echo   Dans le dossier "dist" tu as :
-echo     - PoseyHub-portable.exe  : se lance directement
-echo     - PoseyHub-Setup.exe     : installe l'appli
+echo     - SimplyHub-portable.exe  : se lance directement
+echo     - SimplyHub-Setup.exe     : installe l'appli
 echo                                avec un raccourci bureau
 echo  ============================================
 echo.

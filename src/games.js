@@ -466,7 +466,7 @@ function scanKnown(env) {
 }
 
 // ---------------------------------------------------------------------------
-// Réglages et état (games.json dans %APPDATA%\PoseyHub)
+// Réglages et état (games.json dans %APPDATA%\Simply Hub)
 // ---------------------------------------------------------------------------
 const store = {
   custom: [], hidden: [], favorites: [], played: {}, minimizeOnLaunch: true, cache: [],
@@ -699,7 +699,7 @@ function folderOf(id) {
 }
 
 module.exports = {
-  // pour PoseyHub
+  // pour Simply Hub
   load, scan, list, launch, mediaFile, folderOf, addCustom, removeCustom, rename,
   toggleFavorite: (id) => toggle('favorites', id),
   toggleHidden: (id) => toggle('hidden', id),

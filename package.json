@@ -1,6 +1,6 @@
 {
-  "name": "poseyhub",
-  "productName": "PoseyHub",
+  "name": "simply-hub",
+  "productName": "Simply Hub",
   "version": "1.0.0",
   "description": "YouTube, Discord, Spotify et tous tes jeux dans une seule appli de bureau — par PoseyDevs",
   "author": "PoseyDevs",
@@ -25,7 +25,7 @@
   },
   "build": {
     "appId": "com.poseydevs.poseyhub",
-    "productName": "PoseyHub",
+    "productName": "Simply Hub",
     "copyright": "© PoseyDevs",
     "electronVersion": "44.9.3+wvcus",
     "electronDownload": {
@@ -57,7 +57,7 @@
       ]
     },
     "portable": {
-      "artifactName": "PoseyHub-portable.exe"
+      "artifactName": "SimplyHub-portable.exe"
     },
     "nsis": {
       "oneClick": false,
@@ -65,8 +65,8 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "PoseyHub",
-      "artifactName": "PoseyHub-Setup.exe"
+      "shortcutName": "Simply Hub",
+      "artifactName": "SimplyHub-Setup.exe"
     }
   }
 }
