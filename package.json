@@ -28,10 +28,7 @@
     "productName": "PoseyHub",
     "copyright": "© PoseyDevs",
     "electronVersion": "44.9.3+wvcus",
-    "electronDownload": {
-      "version": "44.9.3+wvcus",
-      "mirror": "https://github.com/castlabs/electron-releases/releases/download/v"
-    },
+    "electronDist": "node_modules/electron/dist",
     "afterPack": "./build/afterPack.js",
     "directories": {
       "output": "dist",
