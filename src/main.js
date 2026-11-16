@@ -44,7 +44,7 @@ const SIDEBAR = 72;   // largeur de la barre latérale (px)
 const TOPBAR = 36;    // hauteur de la barre du haut (px)
 const BG = '#0f0f14';
 const ASSETS = path.join(__dirname, '..', 'assets');
-const ICON = path.join(ASSETS, 'icon.png');
+const ICON = path.join(ASSETS, process.platform === 'win32' ? 'icon.ico' : 'icon.png');
 
 const SERVICES = [
   {
