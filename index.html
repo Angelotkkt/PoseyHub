@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Simply Hub : YouTube, Discord, Spotify et tous tes jeux dans une seule appli</title>
+<title>Simply Hub : YouTube, Discord, Spotify, streaming et tous tes jeux dans une seule appli</title>
 <meta name="description" content="Simply Hub est une appli Windows gratuite qui réunit YouTube, Discord, Spotify et tous tes jeux installés dans une seule fenêtre. Par PoseyDevs.">
 <link rel="icon" href="icone-petit.png" sizes="64x64">
 <link rel="apple-touch-icon" href="icone.png">
@@ -92,8 +92,9 @@
   h2 { font: 700 clamp(32px, 4vw, 46px)/1.05 var(--f-titre); margin: 0 0 12px; }
   .chapeau { color: var(--brume); max-width: 40em; margin: 0 0 40px; }
 
-  .trio { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; padding-top: 30px; }
-  @media (max-width: 1100px) { .trio { grid-template-columns: repeat(2, 1fr); row-gap: 60px; } }
+  .trio { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; padding-top: 30px; }
+  @media (max-width: 1100px) { .trio { grid-template-columns: repeat(3, 1fr); row-gap: 60px; } }
+  @media (max-width: 760px) { .trio { grid-template-columns: repeat(2, 1fr); } }
   .service { --c: var(--brume); background: var(--encre); border-radius: 22px; padding: 26px 22px 22px; position: relative;
     border: 2px solid color-mix(in srgb, var(--c) 50%, var(--trait)); }
   .service:nth-child(odd) { transform: rotate(-1.2deg); } .service:nth-child(even) { transform: rotate(1deg); }
@@ -155,7 +156,7 @@
   <div class="heros">
     <div>
       <h1><span class="r">Vidéos</span>, <span class="b">potes</span>, <span class="v">musique</span>, <span class="o">jeux</span>.<br>Une seule appli.</h1>
-      <p class="intro">Simply Hub réunit YouTube, Discord, Spotify et tous les jeux de ton PC dans une vraie appli Windows.
+      <p class="intro">Simply Hub réunit YouTube, Discord, Spotify, Netflix, Disney+, HBO Max, Prime Video et tous les jeux de ton PC dans une vraie appli Windows.
         Tu passes de l'un à l'autre en un clic, ta musique continue pendant que tu discutes, et tes notifications restent à portée de main.</p>
       <div class="boutons">
         <a class="telecharger" id="telecharger" href="#installer">
@@ -196,7 +197,7 @@
   <!-- ===== Services ===== -->
   <section id="services">
     <h2>Tout au même endroit</h2>
-    <p class="chapeau">Une barre sur le côté, quatre boutons. Chaque service garde ta connexion et continue de tourner quand tu changes d'onglet.</p>
+    <p class="chapeau">Une barre sur le côté, un bouton par service. Chaque service garde ta connexion et continue de tourner quand tu changes d'onglet.</p>
     <div class="trio">
       <div class="service" style="--c: var(--rouge)">
         <div class="rond"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="4"/><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor"/></svg></div>
@@ -222,6 +223,12 @@
         <h3>Jeux</h3>
         <p>Tous les jeux de ton PC au même endroit : Steam, Epic, Riot, Battle.net, Xbox, GOG, Ubisoft, HoYoverse, Roblox… Un clic pour jouer.</p>
         <span class="plus">Ctrl + 4</span>
+      </div>
+      <div class="service" style="--c: #e50914">
+        <div class="rond"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 4v16M16.5 4v16M3 9.5h4.5M3 14.5h4.5M16.5 9.5H21M16.5 14.5H21"/></svg></div>
+        <h3>Streaming</h3>
+        <p>Netflix, Disney+, HBO Max et Prime Video, chacun avec sa connexion. Ils ne se chargent que quand tu les ouvres.</p>
+        <span class="plus">Ctrl + 5 à 8</span>
       </div>
     </div>
   </section>
@@ -305,7 +312,7 @@
   </div>
 
   <footer>
-    Simply Hub est un projet perso de PoseyDevs, gratuit, sans lien avec YouTube (Google), Discord ou Spotify.
+    Simply Hub est un projet perso de PoseyDevs, gratuit, sans lien avec YouTube (Google), Discord, Spotify, Netflix, Disney, HBO / Warner Bros. Discovery ou Amazon.
     Les noms des services appartiennent à leurs propriétaires.
     · <a href="https://github.com/Angelotkkt/PoseyHub">Code et mises à jour sur GitHub</a>
   </footer>

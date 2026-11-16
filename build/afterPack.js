@@ -1,6 +1,6 @@
-// Signature VMP Widevine (OPTIONNELLE).
-// Ne s'exécute que si la variable d'environnement POSEYHUB_VMP=1 est définie.
-// Voir le README, section « Si Spotify refuse de lire la musique ».
+// Signature VMP Widevine (lecture des vidéos protégées : Netflix, Disney+, HBO Max, Prime Video, Spotify).
+// Ne s'exécute que si POSEYHUB_VMP=1 (mis automatiquement sur GitHub quand le compte castLabs est configuré).
+// Voir LISEZ-MOI.md, section « Streaming ».
 const { execSync } = require('child_process');
 
 exports.default = async function afterPack(context) {

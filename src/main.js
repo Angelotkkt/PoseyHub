@@ -62,6 +62,27 @@ const SERVICES = [
     url: 'poseyhub://app/games.html',
     local: true, preload: 'gamesPreload.js', domains: [],
   },
+  // Streaming vidéo : chargés seulement quand on les ouvre (lazy), pour ne pas alourdir le démarrage
+  {
+    id: 'netflix', name: 'Netflix', color: '#e50914', group: 'streaming', lazy: true,
+    url: 'https://www.netflix.com/browse',
+    domains: ['netflix.com', 'nflxext.com', 'nflximg.net', 'nflxvideo.net', 'nflxso.net'],
+  },
+  {
+    id: 'disney', name: 'Disney+', color: '#1f6bff', group: 'streaming', lazy: true,
+    url: 'https://www.disneyplus.com/',
+    domains: ['disneyplus.com', 'disney-plus.net', 'bamgrid.com', 'dssott.com', 'go.com', 'disney.com'],
+  },
+  {
+    id: 'hbo', name: 'HBO Max', color: '#8b3dff', group: 'streaming', lazy: true,
+    url: 'https://play.hbomax.com/',
+    domains: ['hbomax.com', 'max.com', 'hbo.com', 'discomax.com'],
+  },
+  {
+    id: 'prime', name: 'Prime Video', color: '#1aa3e8', group: 'streaming', lazy: true,
+    url: 'https://www.primevideo.com/',
+    domains: ['primevideo.com', 'amazon.com', 'amazon.fr', 'amazon.de', 'amazon.co.uk', 'amazon.es', 'amazon.it', 'media-amazon.com', 'aiv-cdn.net', 'aiv-delivery.net'],
+  },
 ];
 // Page Réglages : s'affiche comme un service, mais n'apparaît pas dans la liste
 const SETTINGS_PAGE = {
@@ -117,9 +138,9 @@ const DEFAULTS = {
   zoom: 100,
   vencord: true,
   order: SERVICES.map((s) => s.id),
-  enabled: { youtube: true, discord: true, spotify: true, games: true },
-  notifications: { youtube: false, discord: true, spotify: false, games: false },
-  muted: { youtube: false, discord: false, spotify: false, games: false },
+  enabled: Object.fromEntries(SERVICES.map((s) => [s.id, true])),
+  notifications: Object.fromEntries(SERVICES.map((s) => [s.id, s.id === 'discord'])),
+  muted: Object.fromEntries(SERVICES.map((s) => [s.id, false])),
 };
 const settings = JSON.parse(JSON.stringify(DEFAULTS));
 const settingsFile = () => path.join(app.getPath('userData'), 'settings.json');
@@ -435,7 +456,7 @@ function setMuted(id, value) {
 
 // ---------------------------------------------------------------------------
 // Raccourcis clavier
-//   Ctrl+1…4 : changer de service   Ctrl+Tab : service suivant   Ctrl+, : réglages
+//   Ctrl+1…9 : changer de service   Ctrl+Tab : service suivant   Ctrl+, : réglages
 //   Ctrl+R / F5 : actualiser        Alt+← / Alt+→ : précédent / suivant
 //   Ctrl+M : couper le son          F11 : plein écran            Ctrl+Shift+I : outils de dev
 // ---------------------------------------------------------------------------
@@ -499,7 +520,7 @@ function showContextMenu(wc, p) {
 function buildState() {
   const u = updater.state();
   const services = visibleServices().map((s) => ({
-    id: s.id, name: s.name, color: s.color,
+    id: s.id, name: s.name, color: s.color, group: s.group || 'main',
     badge: settings.badges ? (views[s.id]?.badge || 0) : 0,
     loading: !!views[s.id]?.loading,
     title: views[s.id]?.title || s.name,
@@ -658,6 +679,18 @@ async function vencordUpdate(force) {
 const exePath = () => process.env.PORTABLE_EXECUTABLE_FILE || process.execPath;
 const loginItem = () => app.getLoginItemSettings({ path: exePath(), args: ['--hidden'] });
 
+// Protection vidéo : Widevine (castLabs) + signature VMP, exigée par Netflix, Disney+, HBO Max, Prime Video
+function drmStatus() {
+  let widevine = false;
+  try {
+    const st = components && typeof components.status === 'function' ? components.status() : {};
+    widevine = Object.values(st || {}).some((c) => c && (c.status === 'updated' || c.status === 'up-to-date' || c.version));
+  } catch { /* ignore */ }
+  const exe = process.execPath;
+  const vmp = fs.existsSync(exe + '.sig') || fs.existsSync(path.join(path.dirname(exe), path.basename(exe) + '.sig'));
+  return { widevine, vmp, packaged: app.isPackaged };
+}
+
 async function settingsSnapshot() {
   const gl = await games.list().catch(() => ({ games: [], scanning: false, minimizeOnLaunch: true }));
   return {
@@ -669,6 +702,7 @@ async function settingsSnapshot() {
       electron: process.versions.electron,
       site: updater.SITE,
     },
+    drm: drmStatus(),
     settings: {
       closeToTray: settings.closeToTray, alwaysOnTop: settings.alwaysOnTop, startHidden: settings.startHidden,
       preloadAll: settings.preloadAll, theme: settings.theme, accentMode: settings.accentMode, accent: settings.accent,
@@ -681,7 +715,7 @@ async function settingsSnapshot() {
     services: settings.order.map((id) => SERVICES.find((s) => s.id === id)).filter(Boolean).map((s) => ({
       id: s.id, name: s.name, color: s.color,
       enabled: !!settings.enabled[s.id], notifications: !!settings.notifications[s.id], muted: !!settings.muted[s.id],
-      loaded: !!views[s.id], local: !!s.local,
+      loaded: !!views[s.id], local: !!s.local, group: s.group || 'main',
     })),
     update: updater.state(),
     spotify: spotify.status(),
@@ -735,7 +769,7 @@ function setSetting(key, value, id) {
       if (!value) {
         destroyView(id);
         if (activeId === id) switchTo(visibleServices()[0].id);
-      } else if (settings.preloadAll && !views[id]) createView(SERVICES.find((s) => s.id === id));
+      } else if (settings.preloadAll && !views[id] && !SERVICES.find((s) => s.id === id).lazy) createView(SERVICES.find((s) => s.id === id));
       buildTray();
       break;
     }
@@ -1005,7 +1039,7 @@ if (!app.requestSingleInstanceLock()) {
 
     // On charge les autres services en arrière-plan (notifications Discord, etc.)
     if (settings.preloadAll) {
-      list.filter((s) => s.id !== first).forEach((s, i) => {
+      list.filter((s) => s.id !== first && !s.lazy).forEach((s, i) => {
         setTimeout(() => { if (!views[s.id] && settings.enabled[s.id]) { createView(s); sendState(); } }, 1500 * (i + 1));
       });
     }

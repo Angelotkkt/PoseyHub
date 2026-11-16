@@ -168,6 +168,10 @@ const I = {
   spotify: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>',
   games: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 7h9a5 5 0 0 1 4.9 6l-.8 3.8a2.4 2.4 0 0 1-4.1 1.1L14.4 16H9.6l-2.1 1.9a2.4 2.4 0 0 1-4.1-1.1L2.6 13a5 5 0 0 1 4.9-6z"/><path d="M8 10v4M6 12h4"/></svg>',
   youtube: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="4"/><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor"/></svg>',
+  netflix: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 4v16M16.5 4v16M3 9.5h4.5M3 14.5h4.5M16.5 9.5H21M16.5 14.5H21"/></svg>',
+  disney: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.4 5.2 5.6.7-4.1 3.9 1 5.6L12 16.2l-4.9 2.7 1-5.6-4.1-3.9 5.6-.7z"/></svg>',
+  hbo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6.5" width="18" height="12" rx="2.5"/><path d="M8.5 3l3.5 3.5L15.5 3M8 21.5h8"/></svg>',
+  prime: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 8.6v6.8l5.4-3.4z" fill="currentColor"/></svg>',
   bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
   update: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>',
   up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>',
@@ -184,6 +188,7 @@ const SECTIONS = [
   { id: 'discord', name: 'Discord & Vencord', icon: I.discord, c: '#5b6cff' },
   { id: 'spotify', name: 'Spotify', icon: I.spotify, c: '#1fdc6a' },
   { id: 'games', name: 'Jeux', icon: I.games, c: '#ffb21e' },
+  { id: 'streaming', name: 'Streaming', icon: I.netflix, c: '#e50914' },
   { id: 'notifs', name: 'Notifications', icon: I.bell, c: '#ff6fb1' },
   { id: 'about', name: 'À propos', icon: I.update, c: '#1fdc6a' },
 ];
@@ -321,6 +326,22 @@ function sectionGames() {
   </section>`;
 }
 
+function sectionStreaming() {
+  const d = S.drm || {};
+  const list = S.services.filter((v) => v.group === 'streaming');
+  const st = !d.packaged ? status('', 'Mode développement') : d.vmp ? status('ok', 'Appli signée (VMP)') : status('warn', 'Appli non signée');
+  const rows = list.map((v) => row(`${esc(v.name)}`, v.enabled ? (v.loaded ? 'Ouvert' : 'Se charge quand tu l’ouvres') : 'Masqué de la barre',
+    `<div class="btns">${v.enabled ? act('open', 'Ouvrir', v.id) : ''}${act('logout', 'Se déconnecter', v.id, 'danger')}</div>`, 'streaming ' + v.name)).join('');
+  return `<section id="streaming"><h2>Streaming</h2><p class="intro">Netflix, Disney+, HBO Max et Prime Video. Chacun garde sa propre connexion et ne se charge que quand tu l’ouvres.</p>
+    ${card('Lecture des vidéos protégées',
+      row(`Protection vidéo ${st}`, d.vmp
+        ? 'Simply Hub est signé pour la lecture protégée (Widevine + VMP) : les plateformes de streaming peuvent lire leurs vidéos.'
+        : 'Netflix, Disney+, HBO Max et Prime Video exigent une appli signée (VMP). Sans cette signature, les vidéos peuvent afficher une erreur de lecture.', '', 'drm widevine vmp erreur lecture'),
+      d.vmp ? '' : '<div class="note">La signature se fait automatiquement sur GitHub quand le compte castLabs (gratuit) est configuré : voir le LISEZ-MOI, section « Streaming ». En attendant, regarde depuis ton navigateur si une vidéo refuse de démarrer.</div>')}
+    ${card('Services', rows)}
+  </section>`;
+}
+
 function sectionNotifs() {
   const s = S.settings;
   const rows = S.services.filter((v) => !v.local).map((v) =>
@@ -362,7 +383,7 @@ let built = false;
 async function refresh() {
   S = await window.cfg.get();
   const scroll = $('#main').scrollTop;
-  $('#inner').innerHTML = sectionGeneral() + sectionLook() + sectionServices() + sectionDiscord() + sectionSpotify() + sectionGames() + sectionNotifs() + sectionAbout();
+  $('#inner').innerHTML = sectionGeneral() + sectionLook() + sectionServices() + sectionDiscord() + sectionSpotify() + sectionGames() + sectionStreaming() + sectionNotifs() + sectionAbout();
   $('#ver').innerHTML = `Simply Hub ${esc(S.app.version)}<br>par PoseyDevs`;
   if (!built) {
     $('#nav').innerHTML = SECTIONS.map((s) => `<a data-go="${s.id}" style="--c:${s.c}"><span class="ic">${s.icon}</span>${s.name}<span class="tag" data-tag="${s.id}" style="display:none">1</span></a>`).join('');

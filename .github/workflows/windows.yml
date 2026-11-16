@@ -20,6 +20,11 @@ concurrency:
 jobs:
   exe:
     runs-on: windows-latest
+    env:
+      # Compte castLabs EVS (gratuit) pour signer la protection vidéo (VMP) : Netflix, Disney+, HBO Max, Prime Video.
+      # À ajouter dans Settings → Secrets and variables → Actions du dépôt. Sans eux, l'appli est fabriquée sans signature.
+      EVS_ACCOUNT: ${{ secrets.EVS_ACCOUNT }}
+      EVS_PASSWD: ${{ secrets.EVS_PASSWD }}
     steps:
       - uses: actions/checkout@v4
 
@@ -39,6 +44,20 @@ jobs:
       - name: Installation
         shell: bash
         run: npm install --no-audit --no-fund 2>&1 | tee -a journal-windows.txt
+
+      - uses: actions/setup-python@v5
+        if: env.EVS_ACCOUNT != ''
+        with:
+          python-version: "3.12"
+
+      - name: Signature VMP (lecture des vidéos protégées)
+        if: env.EVS_ACCOUNT != ''
+        shell: bash
+        run: |
+          python -m pip install --upgrade castlabs-evs 2>&1 | tail -1 | tee -a journal-windows.txt
+          python -m castlabs_evs.account reauth -A "$EVS_ACCOUNT" -P "$EVS_PASSWD" 2>&1 | tail -2 | tee -a journal-windows.txt
+          echo "POSEYHUB_VMP=1" >> "$GITHUB_ENV"
+          echo "Signature VMP activée" | tee -a journal-windows.txt
 
       - name: Fabrication des .exe
         shell: bash

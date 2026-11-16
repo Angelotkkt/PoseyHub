@@ -1,6 +1,6 @@
 # Simply Hub
 
-YouTube, Discord, Spotify et tous tes jeux dans une seule appli Windows, par **PoseyDevs**.
+YouTube, Discord, Spotify, Netflix, Disney+, HBO Max, Prime Video et tous tes jeux dans une seule appli Windows, par **PoseyDevs**.
 
 **Télécharger : https://angelotkkt.github.io/PoseyHub/**
 
@@ -13,4 +13,4 @@ Le site de téléchargement est `index.html` (GitHub Pages, branche `main`, doss
 
 Pour fabriquer l'appli sur ton PC : voir [LISEZ-MOI.md](LISEZ-MOI.md).
 
-Simply Hub est un projet perso, gratuit, sans lien avec YouTube (Google), Discord ou Spotify.
+Simply Hub est un projet perso, gratuit, sans lien avec YouTube (Google), Discord, Spotify, Netflix, Disney, HBO / Warner Bros. Discovery ou Amazon.

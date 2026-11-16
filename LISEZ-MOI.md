@@ -74,7 +74,7 @@ Clique sur **Informations complémentaires → Exécuter quand même**.
 
 | Touche | Action |
 |---|---|
-| `Ctrl+1` / `Ctrl+2` / `Ctrl+3` / `Ctrl+4` | YouTube / Discord / Spotify / Jeux |
+| `Ctrl+1` à `Ctrl+8` | YouTube, Discord, Spotify, Jeux, Netflix, Disney+, HBO Max, Prime Video (selon l'ordre choisi) |
 | `Ctrl+Tab` | Service suivant |
 | `Ctrl+,` | Réglages |
 | `Ctrl+M` | Couper / remettre le son du service ouvert |
@@ -99,6 +99,33 @@ L'onglet **Jeux** (`Ctrl+4`) trouve tout seul les jeux installés sur ton PC et 
 - **Réduire Simply Hub quand un jeu se lance :** option en bas de la page.
 
 Tout se passe sur ton PC : Simply Hub lit les dossiers des launchers, le registre Windows et le cache local de Steam. Rien n'est envoyé sur Internet.
+
+---
+
+## Streaming : Netflix, Disney+, HBO Max, Prime Video
+
+Les quatre plateformes sont dans la barre latérale, sous un séparateur. Chacune garde sa propre connexion et ne se charge que quand tu l'ouvres.
+
+### Pour que les vidéos se lancent : la signature VMP (une seule fois)
+Ces plateformes protègent leurs vidéos avec Widevine. Elles exigent aussi que l'appli soit **signée VMP** par castLabs, l'entreprise qui fournit la version d'Electron utilisée par Simply Hub.
+Sans cette signature, une vidéo peut afficher une erreur du type « lecture protégée » (Netflix : code M7701…).
+La signature est gratuite. Elle se fait toute seule sur GitHub une fois ton compte castLabs ajouté :
+
+1. Installe **Python** depuis https://www.python.org (coche « Add python.exe to PATH »).
+2. Dans un terminal, tape :
+   ```bat
+   pip install castlabs-evs
+   python -m castlabs_evs.account signup
+   ```
+   Choisis un nom de compte et un mot de passe, puis confirme l'e-mail que tu reçois.
+3. Sur GitHub, va dans le dépôt PoseyHub, puis **Settings → Secrets and variables → Actions → New repository secret**, et ajoute deux secrets :
+   - `EVS_ACCOUNT` : ton nom de compte castLabs
+   - `EVS_PASSWD` : ton mot de passe castLabs
+4. Va dans **Actions → Programme Windows → Run workflow** pour refabriquer l'appli. Les prochaines versions seront signées automatiquement.
+
+Dans **Réglages → Streaming**, la ligne « Protection vidéo » indique si ta version est signée.
+
+Même signée, la qualité peut être limitée (souvent 720p à 1080p selon la plateforme), comme dans un navigateur Chrome.
 
 ---
 
