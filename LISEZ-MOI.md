@@ -76,6 +76,8 @@ Clique sur **Informations complémentaires → Exécuter quand même**.
 |---|---|
 | `Ctrl+1` / `Ctrl+2` / `Ctrl+3` / `Ctrl+4` | YouTube / Discord / Spotify / Jeux |
 | `Ctrl+Tab` | Service suivant |
+| `Ctrl+,` | Réglages |
+| `Ctrl+M` | Couper / remettre le son du service ouvert |
 | `Ctrl+R` ou `F5` | Actualiser |
 | `Alt+←` / `Alt+→` | Page précédente / suivante |
 | `F11` | Plein écran |
@@ -97,6 +99,27 @@ L'onglet **Jeux** (`Ctrl+4`) trouve tout seul les jeux installés sur ton PC et 
 - **Réduire Simply Hub quand un jeu se lance :** option en bas de la page.
 
 Tout se passe sur ton PC : Simply Hub lit les dossiers des launchers, le registre Windows et le cache local de Steam. Rien n'est envoyé sur Internet.
+
+---
+
+## Réglages
+
+La roue crantée en bas à gauche (ou `Ctrl+,`) ouvre la page **Réglages**. On y trouve une recherche et ces sections :
+- **Général :** lancement avec Windows, démarrage en arrière-plan, garder l'appli près de l'horloge, toujours au premier plan, charger tous les services au lancement.
+- **Apparence :** 5 thèmes (Nuit, Noir OLED, Ardoise, Aubergine, Forêt), couleur d'accent, noms sous les icônes, zoom des pages.
+- **Services :** afficher ou masquer chaque service, changer leur ordre, couper le son, notifications Windows, vider le cache, se déconnecter.
+- **Discord & Vencord**, **Spotify**, **Jeux**, **Notifications** et **À propos** (mises à jour, dossier des données, réinitialisation).
+
+Le clic droit sur une icône de la barre latérale donne aussi un menu rapide (actualiser, couper le son, notifications, masquer).
+
+## Vencord (Discord)
+
+Simply Hub peut ajouter **Vencord** à Discord : des plugins (messages supprimés visibles, réactions améliorées…) et des thèmes.
+- Simply Hub n'inclut pas Vencord. Au premier lancement, il télécharge la version officielle depuis GitHub (https://github.com/Vendicated/Vencord), puis vérifie les nouveautés toutes les 12 heures.
+- Les plugins et thèmes se règlent dans Discord : **Paramètres utilisateur → section Vencord**.
+- Tu peux le couper à tout moment dans **Réglages → Discord & Vencord**.
+
+Vencord est un projet indépendant (licence GPL-3.0). Les mods de client vont à l'encontre des conditions d'utilisation de Discord : utilise-le en connaissance de cause.
 
 ---
 

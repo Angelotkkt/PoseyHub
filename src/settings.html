@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: poseyhub:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+<title>Réglages</title>
+<style>
+  :root {
+    --bg: #0f0f14; --deep: #0a0a0f; --panel: #17171f; --panel2: #1d1d27; --hover: #25252f; --line: #22222c;
+    --text: #e9e9f1; --muted: #8b8b9c; --on: #5b6cff; --ok: #1fdc6a; --warn: #ffb21e; --bad: #ff4d5e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); overflow: hidden;
+    font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; font-size: 14px; }
+  button, input, select { font: inherit; color: inherit; }
+  button { background: none; border: 0; cursor: pointer; }
+  svg { width: 18px; height: 18px; flex: none; display: block; }
+  ::-webkit-scrollbar { width: 10px; } ::-webkit-scrollbar-thumb { background: var(--hover); border-radius: 5px; border: 2px solid var(--bg); }
+
+  .wrap { display: grid; grid-template-columns: 240px 1fr; height: 100%; }
+
+  /* ---------- Navigation ---------- */
+  aside { border-right: 1px solid var(--line); padding: 22px 12px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
+  aside h1 { font-size: 22px; font-weight: 750; padding: 0 10px 14px; letter-spacing: -.3px; }
+  .search { display: flex; align-items: center; gap: 8px; margin: 0 4px 14px; padding: 8px 12px; border-radius: 10px; background: var(--panel); color: var(--muted); }
+  .search:focus-within { box-shadow: 0 0 0 2px var(--on); }
+  .search input { flex: 1; min-width: 0; background: none; border: 0; outline: none; color: var(--text); }
+  .search svg { width: 16px; height: 16px; }
+  aside a { display: flex; align-items: center; gap: 11px; padding: 9px 12px; border-radius: 10px; color: var(--muted); cursor: pointer; font-weight: 600; text-decoration: none; }
+  aside a:hover { background: var(--panel); color: var(--text); }
+  aside a.on { background: var(--panel2); color: var(--text); }
+  aside a .ic { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--panel); color: var(--c, var(--muted)); }
+  aside a.on .ic { background: var(--c, var(--on)); color: #fff; }
+  aside a .ic svg { width: 16px; height: 16px; }
+  aside .tag { margin-left: auto; font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 999px; background: var(--ok); color: #06150c; }
+  aside .grow { flex: 1; }
+  aside .ver { color: var(--muted); font-size: 12px; padding: 12px; line-height: 1.5; }
+
+  /* ---------- Contenu ---------- */
+  main { position: relative; overflow-y: auto; padding: 28px 36px 60px; scroll-behavior: smooth; }
+  .inner { max-width: 780px; }
+  section { padding-bottom: 26px; scroll-margin-top: 18px; }
+  section > h2 { font-size: 20px; font-weight: 750; margin: 8px 0 4px; letter-spacing: -.2px; display: flex; align-items: center; gap: 10px; }
+  section > p.intro { color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin-bottom: 14px; }
+  .card h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .7px; color: var(--muted); padding: 14px 18px 4px; font-weight: 750; }
+  .row { display: flex; align-items: center; gap: 16px; padding: 14px 18px; border-top: 1px solid var(--line); }
+  .card h3 + .row, .card > .row:first-child { border-top: 0; }
+  .row .txt { flex: 1; min-width: 0; }
+  .row .txt b { display: block; font-weight: 600; }
+  .row .txt small { display: block; color: var(--muted); margin-top: 3px; line-height: 1.45; font-size: 12.5px; }
+  .row.hidden-by-search { display: none; }
+  mark { background: color-mix(in srgb, var(--on) 40%, transparent); color: inherit; border-radius: 3px; }
+
+  /* Interrupteur */
+  .switch { position: relative; width: 44px; height: 26px; flex: none; }
+  .switch input { position: absolute; inset: 0; opacity: 0; cursor: pointer; margin: 0; z-index: 1; }
+  .switch i { position: absolute; inset: 0; border-radius: 999px; background: var(--hover); transition: background .18s; }
+  .switch i::after { content: ""; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff;
+    transition: transform .18s; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
+  .switch input:checked + i { background: var(--on); }
+  .switch input:checked + i::after { transform: translateX(18px); }
+  .switch input:disabled + i { opacity: .4; }
+  .switch input:focus-visible + i { box-shadow: 0 0 0 3px color-mix(in srgb, var(--on) 50%, transparent); }
+
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 9px; background: var(--panel2); font-weight: 600; white-space: nowrap;
+    border: 1px solid var(--line); transition: background .12s; }
+  .btn:hover { background: var(--hover); }
+  .btn.primary { background: var(--on); border-color: transparent; color: #fff; }
+  .btn.primary:hover { filter: brightness(1.1); }
+  .btn.danger { color: var(--bad); }
+  .btn:disabled { opacity: .45; pointer-events: none; }
+  .btn svg { width: 15px; height: 15px; }
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* Thèmes */
+  .themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; padding: 14px 18px 18px; }
+  .theme { border-radius: 12px; padding: 8px; border: 2px solid transparent; background: var(--panel2); text-align: left; transition: border-color .15s, transform .12s; }
+  .theme:hover { transform: translateY(-2px); }
+  .theme.on { border-color: var(--on); }
+  .theme .pv { height: 68px; border-radius: 8px; display: grid; grid-template-columns: 18px 1fr; gap: 5px; padding: 6px; }
+  .theme .pv .sb { border-radius: 4px; display: flex; flex-direction: column; gap: 4px; padding: 3px; }
+  .theme .pv .sb i { display: block; height: 10px; border-radius: 3px; }
+  .theme .pv .ct { border-radius: 4px; padding: 6px; display: flex; flex-direction: column; gap: 5px; }
+  .theme .pv .ct i { display: block; height: 6px; border-radius: 3px; }
+  .theme b { display: block; margin: 8px 2px 2px; font-size: 13px; }
+  .accents { display: flex; gap: 10px; flex-wrap: wrap; }
+  .accent { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--panel); box-shadow: 0 0 0 2px transparent; transition: box-shadow .15s, transform .12s; }
+  .accent:hover { transform: scale(1.1); }
+  .accent.on { box-shadow: 0 0 0 2px var(--text); }
+  .seg { display: inline-flex; background: var(--panel2); border-radius: 10px; padding: 3px; border: 1px solid var(--line); }
+  .seg button { padding: 6px 12px; border-radius: 7px; color: var(--muted); font-weight: 600; font-size: 13px; }
+  .seg button.on { background: var(--hover); color: var(--text); }
+  .range { display: flex; align-items: center; gap: 12px; }
+  .range output { width: 48px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 200px; height: 5px; border-radius: 3px; outline: none;
+    background: linear-gradient(to right, var(--on) var(--v, 50%), var(--hover) var(--v, 50%)); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+
+  /* Services */
+  .svc .ico { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--c); color: #fff; flex: none; }
+  .svc .ico.ink { color: #101014; }
+  .svc .ico svg { width: 21px; height: 21px; }
+  .svc.off .ico { filter: grayscale(1) brightness(.6); }
+  .svc .opts { display: flex; align-items: center; gap: 14px; }
+  .mini { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 10.5px; color: var(--muted); font-weight: 600; }
+  .mini .switch { width: 38px; height: 22px; }
+  .mini .switch i::after { width: 16px; height: 16px; }
+  .mini .switch input:checked + i::after { transform: translateX(16px); }
+  .move { display: flex; flex-direction: column; gap: 2px; }
+  .move button { width: 26px; height: 18px; border-radius: 5px; color: var(--muted); display: grid; place-items: center; }
+  .move button:hover { background: var(--hover); color: var(--text); }
+  .move button:disabled { opacity: .25; pointer-events: none; }
+  .move svg { width: 14px; height: 14px; }
+  .more { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); }
+  .more:hover { background: var(--hover); color: var(--text); }
+
+  .status { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 650; padding: 4px 10px; border-radius: 999px; background: var(--panel2); color: var(--muted); }
+  .status i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .status.ok { color: var(--ok); } .status.ok i { background: var(--ok); }
+  .status.warn { color: var(--warn); } .status.warn i { background: var(--warn); }
+  .status.bad { color: var(--bad); } .status.bad i { background: var(--bad); }
+  .note { padding: 12px 18px 16px; color: var(--muted); font-size: 12.5px; line-height: 1.55; border-top: 1px solid var(--line); }
+  .note a { color: var(--text); cursor: pointer; text-decoration: underline; }
+  .hero { display: flex; align-items: center; gap: 18px; padding: 18px; }
+  .hero img { width: 64px; height: 64px; border-radius: 18px; }
+  .hero b { font-size: 20px; display: block; }
+  .hero small { color: var(--muted); display: block; margin-top: 4px; }
+  .vencord-logo { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: linear-gradient(135deg, #ff8fd1, #8a7dff); color: #fff; flex: none; }
+  .vencord-logo svg { width: 22px; height: 22px; }
+
+  .menu { position: fixed; z-index: 30; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 6px; min-width: 210px;
+    box-shadow: 0 16px 40px rgba(0,0,0,.5); display: none; }
+  .menu.show { display: block; }
+  .menu button { display: flex; width: 100%; padding: 8px 10px; border-radius: 7px; text-align: left; }
+  .menu button:hover { background: var(--hover); }
+  .menu button.danger { color: var(--bad); }
+  .toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(10px); background: var(--panel2); border: 1px solid var(--line);
+    padding: 10px 16px; border-radius: 10px; opacity: 0; pointer-events: none; transition: .2s; box-shadow: 0 10px 30px rgba(0,0,0,.45); z-index: 40; }
+  .toast.show { opacity: 1; transform: translateX(-50%); }
+  .empty-search { color: var(--muted); padding: 40px 0; text-align: center; display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <aside>
+    <h1>Réglages</h1>
+    <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+      <input id="q" placeholder="Rechercher un réglage" spellcheck="false" autocomplete="off"></label>
+    <nav id="nav"></nav>
+    <div class="grow"></div>
+    <div class="ver" id="ver"></div>
+  </aside>
+  <main id="main"><div class="inner" id="inner"></div><div class="empty-search" id="empty">Aucun réglage ne correspond.</div></main>
+</div>
+<div class="menu" id="menu"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const I = {
+  general: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg>',
+  look: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 2-.9 2-2 0-.6-.2-1-.5-1.4-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.3A4.7 4.7 0 0 0 21 9.6C21 5.9 17 3 12 3z"/><circle cx="7.5" cy="11" r="1.3" fill="currentColor"/><circle cx="10" cy="7" r="1.3" fill="currentColor"/><circle cx="15" cy="7" r="1.3" fill="currentColor"/></svg>',
+  services: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>',
+  discord: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/><circle cx="9" cy="12" r=".9" fill="currentColor"/><circle cx="13" cy="12" r=".9" fill="currentColor"/><circle cx="17" cy="12" r=".9" fill="currentColor"/></svg>',
+  spotify: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>',
+  games: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 7h9a5 5 0 0 1 4.9 6l-.8 3.8a2.4 2.4 0 0 1-4.1 1.1L14.4 16H9.6l-2.1 1.9a2.4 2.4 0 0 1-4.1-1.1L2.6 13a5 5 0 0 1 4.9-6z"/><path d="M8 10v4M6 12h4"/></svg>',
+  youtube: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="4"/><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor"/></svg>',
+  bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
+  update: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>',
+  up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>',
+  down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  more: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>',
+  vencord: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5l8 15 8-15"/><path d="M9 5l3 6 3-6"/></svg>',
+  ext: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+};
+const INK = new Set(['spotify', 'games']);
+const SECTIONS = [
+  { id: 'general', name: 'Général', icon: I.general, c: '#7d8bff' },
+  { id: 'look', name: 'Apparence', icon: I.look, c: '#c06cff' },
+  { id: 'services', name: 'Services', icon: I.services, c: '#22c3ee' },
+  { id: 'discord', name: 'Discord & Vencord', icon: I.discord, c: '#5b6cff' },
+  { id: 'spotify', name: 'Spotify', icon: I.spotify, c: '#1fdc6a' },
+  { id: 'games', name: 'Jeux', icon: I.games, c: '#ffb21e' },
+  { id: 'notifs', name: 'Notifications', icon: I.bell, c: '#ff6fb1' },
+  { id: 'about', name: 'À propos', icon: I.update, c: '#1fdc6a' },
+];
+
+let S = null;            // dernier état reçu
+let toastTimer;
+function toast(msg) {
+  if (!msg) return;
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+const ago = (ts) => {
+  if (!ts) return 'jamais';
+  const rtf = new Intl.RelativeTimeFormat('fr', { numeric: 'auto' });
+  const s = (ts - Date.now()) / 1000, a = Math.abs(s);
+  if (a < 60) return 'à l’instant';
+  if (a < 3600) return rtf.format(Math.round(s / 60), 'minute');
+  if (a < 86400) return rtf.format(Math.round(s / 3600), 'hour');
+  return rtf.format(Math.round(s / 86400), 'day');
+};
+
+// ---------- briques ----------
+const sw = (key, on, extra = '') => `<label class="switch"><input type="checkbox" data-set="${key}" ${extra} ${on ? 'checked' : ''}><i></i></label>`;
+const row = (title, desc, control, kw = '') => `<div class="row" data-kw="${esc((title + ' ' + desc + ' ' + kw).toLowerCase())}">
+  <div class="txt"><b>${title}</b>${desc ? `<small>${desc}</small>` : ''}</div>${control}</div>`;
+const card = (title, rows, after = '') => `<div class="card">${title ? `<h3>${title}</h3>` : ''}${rows}${after}</div>`;
+const act = (name, label, arg = '', cls = '', icon = '') => `<button class="btn ${cls}" data-act="${name}" data-arg="${esc(arg)}">${icon}${label}</button>`;
+const status = (kind, text) => `<span class="status ${kind}"><i></i>${esc(text)}</span>`;
+
+function sectionGeneral() {
+  const s = S.settings;
+  return `<section id="general"><h2>Général</h2><p class="intro">Le comportement de Simply Hub sur ton PC.</p>
+    ${card('Démarrage',
+      row('Lancer Simply Hub au démarrage de Windows', 'L’appli s’ouvre toute seule quand tu allumes ton PC.', sw('login', S.login), 'windows démarrage automatique')
+      + row('Démarrer en arrière-plan', 'Au démarrage de Windows, Simply Hub reste près de l’horloge sans ouvrir de fenêtre.', sw('startHidden', s.startHidden), 'réduit cache')
+      + row('Charger tous les services au lancement', 'Discord, YouTube… sont prêts tout de suite et les notifications arrivent même sans les ouvrir. Désactive pour économiser de la mémoire.', sw('preloadAll', s.preloadAll), 'mémoire ram performance'))}
+    ${card('Fenêtre',
+      row('Garder Simply Hub ouvert quand je ferme la fenêtre', 'La croix range l’appli près de l’horloge : la musique et les notifications continuent.', sw('closeToTray', s.closeToTray), 'zone de notification fermer croix tray')
+      + row('Toujours au premier plan', 'La fenêtre reste au-dessus des autres.', sw('alwaysOnTop', s.alwaysOnTop), 'dessus'))}
+    ${card('Raccourcis clavier', `<div class="note" style="border-top:0">
+      <b style="color:var(--text)">Ctrl+1 à 4</b> changer de service · <b style="color:var(--text)">Ctrl+Tab</b> service suivant · <b style="color:var(--text)">Ctrl+,</b> réglages ·
+      <b style="color:var(--text)">Ctrl+M</b> couper le son · <b style="color:var(--text)">Ctrl+R</b> actualiser · <b style="color:var(--text)">Alt+←</b> page précédente · <b style="color:var(--text)">F11</b> plein écran</div>`)}
+  </section>`;
+}
+
+function sectionLook() {
+  const s = S.settings;
+  const themes = S.themes.map((t) => `<button class="theme ${s.theme === t.id ? 'on' : ''}" data-theme="${t.id}">
+      <div class="pv" style="background:${t.bg}"><div class="sb" style="background:${t.panel}"><i style="background:#ff3b4e"></i><i style="background:#5b6cff"></i><i style="background:#1fdc6a"></i></div>
+      <div class="ct" style="background:${t.panel2}"><i style="background:${t.text};width:60%;opacity:.8"></i><i style="background:${t.muted};width:85%;opacity:.6"></i><i style="background:${t.muted};width:40%;opacity:.6"></i></div></div>
+      <b>${esc(t.name)}</b></button>`).join('');
+  const accents = S.accents.map((c) => `<button class="accent ${s.accentMode === 'fixe' && s.accent === c ? 'on' : ''}" data-accent="${c}" style="background:${c}" title="${c}"></button>`).join('');
+  return `<section id="look"><h2>Apparence</h2><p class="intro">Couleurs, taille et affichage de l’interface.</p>
+    <div class="card" data-kw="thème couleurs sombre noir oled ardoise aubergine forêt"><h3>Thème</h3><div class="themes">${themes}</div></div>
+    ${card('Couleur d’accent',
+      row('Couleur des repères', 'La barre de chargement et le point à côté du nom du service.',
+        `<div class="seg"><button data-accentmode="service" class="${s.accentMode !== 'fixe' ? 'on' : ''}">Du service</button><button data-accentmode="fixe" class="${s.accentMode === 'fixe' ? 'on' : ''}">Fixe</button></div>`, 'accent')
+      + (s.accentMode === 'fixe' ? row('Choisir la couleur', '', `<div class="accents">${accents}</div>`, 'accent') : ''))}
+    ${card('Affichage',
+      row('Afficher les noms sous les icônes', 'Sinon, le nom apparaît au survol.', sw('showLabels', s.showLabels), 'barre latérale libellés')
+      + row('Zoom des pages', 'Agrandit ou réduit YouTube, Discord et les autres pages.',
+        `<div class="range"><input type="range" min="70" max="150" step="10" value="${s.zoom}" id="zoom" style="--v:${(s.zoom - 70) / 0.8}%"><output id="zoomv">${s.zoom} %</output></div>`, 'taille texte grossir'))}
+  </section>`;
+}
+
+function sectionServices() {
+  const list = S.services;
+  const rows = list.map((v, i) => `
+    <div class="row svc ${v.enabled ? '' : 'off'}" data-kw="${esc(v.name.toLowerCase())} service ordre afficher son notifications">
+      <div class="move"><button data-move="${v.id}" data-dir="-1" ${i === 0 ? 'disabled' : ''} title="Monter">${I.up}</button><button data-move="${v.id}" data-dir="1" ${i === list.length - 1 ? 'disabled' : ''} title="Descendre">${I.down}</button></div>
+      <div class="ico ${INK.has(v.id) ? 'ink' : ''}" style="--c:${v.color}">${I[v.id] || ''}</div>
+      <div class="txt"><b>${esc(v.name)}</b><small>${v.enabled ? `Ctrl+${list.filter((x) => x.enabled).indexOf(v) + 1}` : 'Masqué de la barre'}${v.muted ? ' · son coupé' : ''}</small></div>
+      <div class="opts">
+        <div class="mini">${sw('enabled', v.enabled, `data-id="${v.id}"`)}Afficher</div>
+        <div class="mini">${sw('muted', !v.muted, `data-id="${v.id}" data-invert="1"`)}Son</div>
+        ${v.local ? '' : `<div class="mini">${sw('notifications', v.notifications, `data-id="${v.id}"`)}Notifs</div>`}
+        <button class="more" data-menu="${v.id}" title="Plus d’actions">${I.more}</button>
+      </div>
+    </div>`).join('');
+  return `<section id="services"><h2>Services</h2><p class="intro">Choisis les services affichés et leur ordre. Le premier s’ouvre avec Ctrl+1, le suivant avec Ctrl+2…</p>
+    ${card('', rows)}</section>`;
+}
+
+function sectionDiscord() {
+  const v = S.vencord;
+  const on = S.settings.vencord;
+  let st;
+  if (!on) st = status('', 'Désactivé');
+  else if (v.busy) st = status('warn', v.installed ? 'Mise à jour…' : 'Téléchargement…');
+  else if (v.error) st = status('bad', 'Erreur');
+  else if (v.installed) st = status('ok', 'Actif');
+  else st = status('warn', 'Pas encore installé');
+  const discord = S.services.find((x) => x.id === 'discord') || {};
+  return `<section id="discord"><h2>Discord & Vencord</h2><p class="intro">Vencord ajoute des plugins et des thèmes à Discord : messages supprimés visibles, réactions améliorées, thèmes personnalisés…</p>
+    <div class="card">
+      <div class="row" data-kw="vencord plugins thèmes mod discord">
+        <div class="vencord-logo">${I.vencord}</div>
+        <div class="txt"><b>Vencord ${st}</b><small>${on && v.installed ? `Version ${esc(v.version || '?')} · mise à jour ${ago(v.updatedAt)}` : 'Téléchargé depuis la page officielle de Vencord sur GitHub.'}</small></div>
+        ${sw('vencord', on)}
+      </div>
+      ${v.error && on ? `<div class="note" style="color:var(--bad)">${esc(v.error)}</div>` : ''}
+      <div class="row" data-kw="vencord mettre à jour réglages plugins">
+        <div class="txt"><b>Plugins et thèmes</b><small>Ils se règlent dans Discord : Paramètres utilisateur (⚙) → section <b style="display:inline">Vencord</b>.</small></div>
+        <div class="btns">${act('vencordSettings', 'Ouvrir les réglages Vencord', '', '', '')}${act('vencordUpdate', v.busy ? 'Patiente…' : 'Mettre à jour', '', '', I.update)}</div>
+      </div>
+      <div class="note">Vencord est un projet indépendant de Vendicated (licence GPL-3.0), sans lien avec Simply Hub ni Discord. Les mods de client vont à l’encontre des conditions d’utilisation de Discord : utilise-le en connaissance de cause.
+        <a data-act="openVencord">Site de Vencord</a></div>
+    </div>
+    ${card('Discord',
+      row('Notifications Windows', 'Nouveaux messages, mentions et appels.', sw('notifications', discord.notifications, 'data-id="discord"'), 'notifications messages')
+      + row('Session Discord', 'Recharger, vider le cache ou se déconnecter.', `<div class="btns">${act('reload', 'Actualiser', 'discord')}${act('clearCache', 'Vider le cache', 'discord')}${act('logout', 'Se déconnecter', 'discord', 'danger')}</div>`, 'cache déconnexion'))}
+  </section>`;
+}
+
+function sectionSpotify() {
+  const sp = S.spotify;
+  const st = !sp.configured ? status('warn', 'À configurer') : sp.loggedIn ? status('ok', 'Connecté') : status('warn', 'Non connecté');
+  return `<section id="spotify"><h2>Spotify</h2><p class="intro">Le lecteur Spotify de Simply Hub utilise la connexion officielle de Spotify.</p>
+    ${card('',
+      row(`Compte Spotify ${st}`, sp.configured ? `Client ID : ${esc(sp.clientId.slice(0, 6))}••••••${esc(sp.clientId.slice(-4))}` : 'Ouvre l’onglet Spotify pour le configurer en 3 étapes.',
+        `<div class="btns">${act('open', 'Ouvrir Spotify', 'spotify')}${sp.loggedIn ? act('spotifyLogout', 'Se déconnecter', '', 'danger') : ''}</div>`, 'compte connexion')
+      + row('Changer le Client ID', 'Pour utiliser une autre appli Spotify for Developers.', act('spotifyReset', 'Changer…'), 'client id développeur'),
+      '<div class="note">Spotify demande Premium pour piloter la lecture, et une appli Spotify for Developers peut servir à 5 comptes au maximum.</div>')}
+  </section>`;
+}
+
+function sectionGames() {
+  const g = S.games;
+  return `<section id="games"><h2>Jeux</h2><p class="intro">Le Gaming Hub trouve les jeux installés sur ton PC.</p>
+    ${card('',
+      row(`${g.count} jeu${g.count > 1 ? 'x' : ''} trouvé${g.count > 1 ? 's' : ''}`, g.scanning ? 'Recherche en cours…' : `Dernière recherche ${ago(g.lastScan)}.`,
+        `<div class="btns">${act('open', 'Ouvrir les jeux', 'games')}${act('gamesScan', g.scanning ? 'Recherche…' : 'Rechercher à nouveau', '', '', I.update)}</div>`, 'steam epic actualiser scan')
+      + row('Réduire Simply Hub quand un jeu se lance', '', sw('gamesMinimize', g.minimizeOnLaunch), 'réduire lancement')
+      + row('Jeux masqués', g.hidden ? `${g.hidden} jeu${g.hidden > 1 ? 'x' : ''} masqué${g.hidden > 1 ? 's' : ''}` : 'Aucun jeu masqué.', act('gamesUnhide', 'Tout réafficher', '', g.hidden ? '' : '" disabled data-x="'), 'masqués cachés'))}
+  </section>`;
+}
+
+function sectionNotifs() {
+  const s = S.settings;
+  const rows = S.services.filter((v) => !v.local).map((v) =>
+    row(`Notifications Windows de ${esc(v.name)}`, v.id === 'discord' ? 'Messages, mentions et appels.' : 'Notifications envoyées par le site.', sw('notifications', v.notifications, `data-id="${v.id}"`), 'notifications ' + v.name)).join('');
+  return `<section id="notifs"><h2>Notifications</h2><p class="intro">Les pastilles de messages non lus et les notifications Windows.</p>
+    ${card('Pastilles',
+      row('Pastilles sur les icônes', 'Le nombre de messages non lus sur les icônes de la barre latérale.', sw('badges', s.badges), 'non lus badge')
+      + row('Pastille sur l’icône de la barre des tâches', 'Un point rouge sur l’icône de Simply Hub en bas de l’écran.', sw('taskbarBadge', s.taskbarBadge, s.badges ? '' : 'disabled'), 'barre des tâches'))}
+    ${card('Notifications Windows', rows)}
+  </section>`;
+}
+
+function sectionAbout() {
+  const u = S.update, a = S.app;
+  let st, btn;
+  switch (u.status) {
+    case 'ready': st = status('ok', `Version ${u.version} prête`); btn = act('installUpdate', 'Redémarrer et installer', '', 'primary'); break;
+    case 'downloading': st = status('warn', `Téléchargement ${u.percent ? u.percent + ' %' : '…'}`); btn = act('checkUpdate', 'Patiente…', '', '" disabled data-x="'); break;
+    case 'checking': st = status('warn', 'Recherche…'); btn = act('checkUpdate', 'Patiente…', '', '" disabled data-x="'); break;
+    case 'available': st = status('warn', `Version ${u.version} disponible`); btn = act('openSite', 'Télécharger sur le site', '', 'primary'); break;
+    case 'error': st = status('bad', 'Vérification impossible'); btn = act('checkUpdate', 'Réessayer', '', '', I.update); break;
+    case 'uptodate': st = status('ok', 'À jour'); btn = act('checkUpdate', 'Vérifier', '', '', I.update); break;
+    default: st = status('', a.packaged ? 'Automatiques' : 'Mode développement'); btn = act('checkUpdate', 'Vérifier', '', '', I.update);
+  }
+  return `<section id="about"><h2>Mises à jour et à propos</h2>
+    <div class="card"><div class="hero"><img src="poseyhub://app/assets/logo-small.png" alt=""><div><b>Simply Hub</b><small>Version ${esc(a.version)}${a.portable ? ' · portable' : ''} · par PoseyDevs</small></div></div>
+      ${row(`Mises à jour ${st}`, a.portable ? 'La version portable te prévient des nouveautés : télécharge-les sur le site.' : 'Les nouvelles versions se téléchargent toutes seules et s’installent quand tu quittes Simply Hub.', btn, 'version nouvelle')}
+      ${row('Liens', '', `<div class="btns">${act('openSite', 'Site', '', '', I.ext)}${act('openGitHub', 'GitHub', '', '', I.ext)}</div>`, 'site github')}
+    </div>
+    ${card('Avancé',
+      row('Dossier des données', 'Connexions, réglages, jeux et Vencord.', act('openData', 'Ouvrir le dossier'), 'appdata fichiers')
+      + row('Réinitialiser les réglages', 'Remet l’apparence et les options par défaut. Tes connexions ne sont pas touchées.', act('resetSettings', 'Réinitialiser', '', 'danger'), 'reset défaut')
+      + row('Quitter Simply Hub', 'Ferme complètement l’appli (la musique s’arrête).', act('quit', 'Quitter', '', 'danger'), 'fermer'))}
+  </section>`;
+}
+
+// ---------- rendu ----------
+let built = false;
+async function refresh() {
+  S = await window.cfg.get();
+  const scroll = $('#main').scrollTop;
+  $('#inner').innerHTML = sectionGeneral() + sectionLook() + sectionServices() + sectionDiscord() + sectionSpotify() + sectionGames() + sectionNotifs() + sectionAbout();
+  $('#ver').innerHTML = `Simply Hub ${esc(S.app.version)}<br>par PoseyDevs`;
+  if (!built) {
+    $('#nav').innerHTML = SECTIONS.map((s) => `<a data-go="${s.id}" style="--c:${s.c}"><span class="ic">${s.icon}</span>${s.name}<span class="tag" data-tag="${s.id}" style="display:none">1</span></a>`).join('');
+    built = true;
+  }
+  const tag = $('[data-tag="about"]');
+  tag.style.display = S.update.status === 'ready' || S.update.status === 'available' ? '' : 'none';
+  tag.textContent = 'Nouveau';
+  $('#main').scrollTop = scroll;
+  applySearch();
+  spy();
+}
+
+function applySearch() {
+  const q = $('#q').value.trim().toLowerCase();
+  let any = false;
+  document.querySelectorAll('section').forEach((sec) => {
+    let secAny = false;
+    sec.querySelectorAll('.row, .card[data-kw]').forEach((r) => {
+      const hit = !q || (r.dataset.kw || r.textContent.toLowerCase()).includes(q) || r.textContent.toLowerCase().includes(q);
+      r.classList.toggle('hidden-by-search', !hit);
+      if (hit) secAny = true;
+    });
+    sec.querySelectorAll('.card').forEach((c) => {
+      const visible = !q || [...c.querySelectorAll('.row')].some((r) => !r.classList.contains('hidden-by-search')) || (c.dataset.kw && !c.classList.contains('hidden-by-search'));
+      c.style.display = visible ? '' : 'none';
+    });
+    sec.style.display = secAny ? '' : 'none';
+    if (secAny) any = true;
+  });
+  $('#empty').style.display = any ? 'none' : 'block';
+}
+
+function spy() {
+  const main = $('#main');
+  let cur = SECTIONS[0].id;
+  for (const s of SECTIONS) {
+    const el = document.getElementById(s.id);
+    if (el && el.style.display !== 'none' && el.offsetTop - 120 <= main.scrollTop) cur = s.id;
+  }
+  if (main.scrollTop + main.clientHeight >= main.scrollHeight - 4) cur = [...SECTIONS].reverse().find((s) => document.getElementById(s.id)?.style.display !== 'none')?.id || cur;
+  document.querySelectorAll('#nav a').forEach((a) => a.classList.toggle('on', a.dataset.go === cur));
+}
+
+// ---------- événements ----------
+document.addEventListener('change', async (e) => {
+  const el = e.target;
+  if (el.matches('[data-set]')) {
+    let v = el.checked;
+    if (el.dataset.invert) v = !v;
+    await window.cfg.set(el.dataset.set, v, el.dataset.id);
+  }
+});
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'zoom') {
+    e.target.style.setProperty('--v', ((e.target.value - 70) / 0.8) + '%');
+    $('#zoomv').textContent = e.target.value + ' %';
+  }
+  if (e.target.id === 'q') applySearch();
+});
+document.addEventListener('change', (e) => { if (e.target.id === 'zoom') window.cfg.set('zoom', +e.target.value); });
+
+document.addEventListener('click', async (e) => {
+  const t = e.target.closest('[data-go],[data-theme],[data-accent],[data-accentmode],[data-move],[data-menu],[data-act]');
+  if (!e.target.closest('#menu') && !e.target.closest('[data-menu]')) $('#menu').classList.remove('show');
+  if (!t) return;
+  const d = t.dataset;
+  if (d.go) { document.getElementById(d.go)?.scrollIntoView({ block: 'start' }); return; }
+  if (d.theme) { await window.cfg.set('theme', d.theme); return; }
+  if (d.accent) { await window.cfg.set('accent', d.accent); return; }
+  if (d.accentmode) { await window.cfg.set('accentMode', d.accentmode); return; }
+  if (d.move) {
+    const order = S.services.map((v) => v.id);
+    const i = order.indexOf(d.move), j = i + Number(d.dir);
+    if (j < 0 || j >= order.length) return;
+    [order[i], order[j]] = [order[j], order[i]];
+    await window.cfg.set('order', order);
+    return;
+  }
+  if (d.menu) { openMenu(t, d.menu); return; }
+  if (d.act) {
+    $('#menu').classList.remove('show');
+    const msg = await window.cfg.action(d.act, d.arg || undefined);
+    toast(msg);
+  }
+});
+
+function openMenu(anchor, id) {
+  const v = S.services.find((x) => x.id === id);
+  const m = $('#menu');
+  m.innerHTML = `
+    <button data-act="open" data-arg="${id}">Ouvrir ${esc(v.name)}</button>
+    <button data-act="reload" data-arg="${id}">Actualiser</button>
+    <button data-act="clearCache" data-arg="${id}">Vider le cache</button>
+    <button data-act="devtools" data-arg="${id}">Outils de développement</button>
+    ${v.local && id !== 'spotify' ? '' : `<button data-act="logout" data-arg="${id}" class="danger">Se déconnecter…</button>`}`;
+  m.classList.add('show');
+  const r = anchor.getBoundingClientRect();
+  m.style.left = Math.min(window.innerWidth - m.offsetWidth - 10, r.right - m.offsetWidth) + 'px';
+  m.style.top = Math.min(window.innerHeight - m.offsetHeight - 10, r.bottom + 6) + 'px';
+}
+
+$('#main').addEventListener('scroll', spy);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if ($('#menu').classList.contains('show')) { $('#menu').classList.remove('show'); return; }
+    if ($('#q').value) { $('#q').value = ''; applySearch(); return; }
+    window.cfg.action('close');
+  }
+  if ((e.ctrlKey && e.key.toLowerCase() === 'f') || (e.key === '/' && document.activeElement !== $('#q'))) { e.preventDefault(); $('#q').focus(); }
+});
+
+let pending;
+window.cfg.onChanged(() => { clearTimeout(pending); pending = setTimeout(refresh, 60); });
+refresh();
+</script>
+</body>
+</html>

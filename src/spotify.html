@@ -28,7 +28,7 @@
     display: grid; place-items: center; flex: none; }
   .step p { color: var(--muted); line-height: 1.5; margin-top: 4px; }
   .step b { color: var(--text); }
-  .code { display: flex; align-items: center; gap: 8px; margin-top: 8px; background: #0b0b10; border: 1px solid #262632;
+  .code { display: flex; align-items: center; gap: 8px; margin-top: 8px; background: var(--deep, #0b0b10); border: 1px solid #262632;
     border-radius: 8px; padding: 8px 10px; font-family: Consolas, monospace; font-size: 13px; }
   .code span { flex: 1; user-select: all; }
   .btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px;
@@ -39,7 +39,7 @@
   .btn.small { padding: 5px 12px; font-size: 12.5px; }
   .btn.big { padding: 13px 28px; font-size: 15px; }
   .field { display: flex; gap: 8px; margin-top: 10px; }
-  .field input { flex: 1; background: #0b0b10; border: 1px solid #262632; border-radius: 8px; padding: 9px 12px; outline: none; }
+  .field input { flex: 1; background: var(--deep, #0b0b10); border: 1px solid #262632; border-radius: 8px; padding: 9px 12px; outline: none; }
   .field input:focus { border-color: var(--green); }
   .err { color: var(--red); margin-top: 10px; min-height: 1em; line-height: 1.4; }
   .center { text-align: center; }
@@ -129,7 +129,7 @@
 
   /* ---------- Barre de lecture ---------- */
   .bar { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(180px, 1fr) minmax(300px, 1.6fr) minmax(180px, 1fr);
-    align-items: center; gap: 16px; padding: 0 16px; background: #0b0b10; border-top: 1px solid #1b1b24; }
+    align-items: center; gap: 16px; padding: 0 16px; background: var(--deep, #0b0b10); border-top: 1px solid #1b1b24; }
   .now { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .now img, .now .ph { width: 56px; height: 56px; border-radius: 6px; object-fit: cover; background: #22222c; flex: none; }
   .np-text { min-width: 0; }
