@@ -22,34 +22,11 @@ La suite de ce fichier explique comment fabriquer l'appli toi-même sur ton PC.
 
 ---
 
-## Spotify : connexion officielle
+## Spotify
 
-L'onglet Spotify n'affiche pas le site de Spotify. C'est un **lecteur Simply Hub** relié à ton compte par la **connexion officielle de Spotify** (Spotify for Developers / Web API).
-À la première ouverture, l'onglet t'explique tout, étape par étape :
-
-1. Sur https://developer.spotify.com/dashboard, clique sur **Create app**.
-2. Redirect URI : `http://127.0.0.1:47823/callback`. Coche **Web API** et **Web Playback SDK**, puis enregistre.
-3. Colle le **Client ID** dans Simply Hub, puis clique sur **Se connecter avec Spotify**. La page de connexion officielle s'ouvre dans ton navigateur. Tu acceptes, et c'est fini.
-
-Ce que tu peux faire ensuite :
-- **Pages :** accueil (écoutés récemment, tes playlists, tes titres du moment), recherche, bibliothèque, playlists, albums et artistes.
-- **Lecture :** play/pause, suivant, précédent, aléatoire, répétition, avancer dans le titre, volume, et bouton ♥ pour liker un titre.
-- **Choix de l'appareil** (Spotify Connect) : Simply Hub lui-même, l'**appli Spotify officielle** sur ton PC, ton téléphone, une enceinte…
-- **Depuis l'icône près de l'horloge :** lecture/pause, suivant, précédent.
-
-**Règles de Spotify à connaître :**
-- Le compte qui crée l'appli sur Spotify for Developers doit avoir **Spotify Premium**.
-- **5 comptes maximum** peuvent utiliser ton Client ID. Pour un autre compte que le tien, ajoute son e-mail dans *User Management* de ton appli Spotify for Developers.
-- Pour contrôler la lecture, il faut aussi Premium.
-- Pour les playlists que tu suis sans les avoir créées, Spotify ne donne pas la liste des titres. Tu peux quand même les lancer.
-
-**Si « Lecteur Simply Hub indisponible » s'affiche :** le lecteur intégré de Spotify n'est pas officiellement prévu pour les applis de bureau, donc il peut parfois refuser de marcher.
-Dans ce cas, clique sur l'appareil en bas à droite, puis sur **Ouvrir l'appli Spotify officielle**, et choisis-la. Simply Hub la pilote alors à distance.
-
-Les identifiants de connexion sont chiffrés avec le coffre de Windows, dans `%APPDATA%\Simply Hub\spotify.json`.
-
-Windows SmartScreen peut afficher « Windows a protégé votre ordinateur », parce que l'appli n'est pas signée.
-Clique sur **Informations complémentaires → Exécuter quand même**.
+L'onglet Spotify affiche le **lecteur web officiel** (open.spotify.com) : connecte-toi avec ton compte Spotify comme sur le site.
+- **Depuis l'icône près de l'horloge** (clic droit) : lecture/pause, titre suivant, titre précédent.
+- **Si la musique refuse de démarrer :** Spotify utilise la même protection que Netflix (Widevine). Voir la section « Streaming » pour la signature VMP.
 
 ---
 

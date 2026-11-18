@@ -84,6 +84,10 @@
   .theme .pv .ct { border-radius: 4px; padding: 6px; display: flex; flex-direction: column; gap: 5px; }
   .theme .pv .ct i { display: block; height: 6px; border-radius: 3px; }
   .theme b { display: block; margin: 8px 2px 2px; font-size: 13px; }
+  .theme .th-sub { display: block; margin: 0 2px; font-size: 11px; color: var(--muted); }
+  .theme .pv.auto { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 1fr; gap: 3px; padding: 0; overflow: hidden; }
+  .theme .pv.auto i { position: relative; display: block; border-radius: 3px; }
+  .theme .pv.auto i b { position: absolute; left: 4px; top: 4px; width: 8px; height: 8px; border-radius: 3px; margin: 0; }
   .accents { display: flex; gap: 10px; flex-wrap: wrap; }
   .accent { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--panel); box-shadow: 0 0 0 2px transparent; transition: box-shadow .15s, transform .12s; }
   .accent:hover { transform: scale(1.1); }
@@ -236,13 +240,16 @@ function sectionGeneral() {
 
 function sectionLook() {
   const s = S.settings;
-  const themes = S.themes.map((t) => `<button class="theme ${s.theme === t.id ? 'on' : ''}" data-theme="${t.id}">
+  const themes = S.themes.map((t) => t.auto ? `<button class="theme ${s.theme === t.id ? 'on' : ''}" data-theme="${t.id}">
+      <div class="pv auto">${t.swatches.map((w) => `<i style="background:${w.bg}"><b style="background:${w.c}"></b></i>`).join('')}</div>
+      <b>${esc(t.name)}</b><small class="th-sub">Recommandé</small></button>` : `<button class="theme ${s.theme === t.id ? 'on' : ''}" data-theme="${t.id}">
       <div class="pv" style="background:${t.bg}"><div class="sb" style="background:${t.panel}"><i style="background:#ff3b4e"></i><i style="background:#5b6cff"></i><i style="background:#1fdc6a"></i></div>
       <div class="ct" style="background:${t.panel2}"><i style="background:${t.text};width:60%;opacity:.8"></i><i style="background:${t.muted};width:85%;opacity:.6"></i><i style="background:${t.muted};width:40%;opacity:.6"></i></div></div>
       <b>${esc(t.name)}</b></button>`).join('');
   const accents = S.accents.map((c) => `<button class="accent ${s.accentMode === 'fixe' && s.accent === c ? 'on' : ''}" data-accent="${c}" style="background:${c}" title="${c}"></button>`).join('');
   return `<section id="look"><h2>Apparence</h2><p class="intro">Couleurs, taille et affichage de l’interface.</p>
-    <div class="card" data-kw="thème couleurs sombre noir oled ardoise aubergine forêt"><h3>Thème</h3><div class="themes">${themes}</div></div>
+    <div class="card" data-kw="thème couleurs sombre noir oled ardoise aubergine forêt onglet automatique"><h3>Thème</h3><div class="themes">${themes}</div>
+      <div class="note">${s.theme === 'auto' ? 'Avec « Selon l’onglet », la barre latérale et la barre du haut prennent les couleurs du service ouvert : noir pour Spotify, gris anthracite pour Discord, bleu nuit pour Disney+…' : 'Ce thème s’applique à toute l’interface, quel que soit l’onglet ouvert.'}</div></div>
     ${card('Couleur d’accent',
       row('Couleur des repères', 'La barre de chargement et le point à côté du nom du service.',
         `<div class="seg"><button data-accentmode="service" class="${s.accentMode !== 'fixe' ? 'on' : ''}">Du service</button><button data-accentmode="fixe" class="${s.accentMode === 'fixe' ? 'on' : ''}">Fixe</button></div>`, 'accent')
@@ -304,14 +311,15 @@ function sectionDiscord() {
 }
 
 function sectionSpotify() {
-  const sp = S.spotify;
-  const st = !sp.configured ? status('warn', 'À configurer') : sp.loggedIn ? status('ok', 'Connecté') : status('warn', 'Non connecté');
-  return `<section id="spotify"><h2>Spotify</h2><p class="intro">Le lecteur Spotify de Simply Hub utilise la connexion officielle de Spotify.</p>
+  const d = S.drm || {};
+  const v = S.services.find((x) => x.id === 'spotify') || {};
+  return `<section id="spotify"><h2>Spotify</h2><p class="intro">Le lecteur web officiel de Spotify (open.spotify.com), connecté à ton compte.</p>
     ${card('',
-      row(`Compte Spotify ${st}`, sp.configured ? `Client ID : ${esc(sp.clientId.slice(0, 6))}••••••${esc(sp.clientId.slice(-4))}` : 'Ouvre l’onglet Spotify pour le configurer en 3 étapes.',
-        `<div class="btns">${act('open', 'Ouvrir Spotify', 'spotify')}${sp.loggedIn ? act('spotifyLogout', 'Se déconnecter', '', 'danger') : ''}</div>`, 'compte connexion')
-      + row('Changer le Client ID', 'Pour utiliser une autre appli Spotify for Developers.', act('spotifyReset', 'Changer…'), 'client id développeur'),
-      '<div class="note">Spotify demande Premium pour piloter la lecture, et une appli Spotify for Developers peut servir à 5 comptes au maximum.</div>')}
+      row('Lecteur Spotify', v.enabled ? (v.loaded ? 'Ouvert' : 'Pas encore ouvert') : 'Masqué de la barre',
+        `<div class="btns">${v.enabled ? act('open', 'Ouvrir', 'spotify') : ''}${act('reload', 'Actualiser', 'spotify')}</div>`, 'lecteur musique')
+      + row('Notifications Windows', 'Titre en cours quand la musique change.', sw('notifications', v.notifications, 'data-id="spotify"'), 'notifications')
+      + row('Session Spotify', 'Vider le cache ou se déconnecter de ton compte.', `<div class="btns">${act('clearCache', 'Vider le cache', 'spotify')}${act('logout', 'Se déconnecter', 'spotify', 'danger')}</div>`, 'cache déconnexion compte'),
+      `<div class="note">Depuis l’icône près de l’horloge (clic droit), tu peux mettre en pause et passer au titre suivant. ${d.packaged && !d.vmp ? 'Si la musique refuse de démarrer, c’est la protection vidéo/audio : voir la section Streaming.' : ''}</div>`)}
   </section>`;
 }
 

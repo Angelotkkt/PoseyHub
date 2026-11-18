@@ -10,7 +10,6 @@ const {
 const path = require('path');
 const fs = require('fs');
 const { pathToFileURL } = require('url');
-const spotify = require('./spotify');
 const updater = require('./updater');
 const games = require('./games');
 const vencord = require('./vencord');
@@ -51,10 +50,10 @@ const SERVICES = [
     preload: 'discordPreload.js',
   },
   {
-    // Lecteur maison relié à ton compte par la connexion officielle Spotify (Web API)
+    // Lecteur web officiel de Spotify
     id: 'spotify', name: 'Spotify', color: '#1fdc6a',
-    url: 'poseyhub://app/spotify.html',
-    local: true, preload: 'spotifyPreload.js', domains: [],
+    url: 'https://open.spotify.com/',
+    domains: ['spotify.com', 'spotify.link', 'scdn.co', 'spotifycdn.com', 'spotifycdn.net'],
   },
   {
     // Gaming Hub : tous les jeux installés sur le PC
@@ -99,6 +98,17 @@ const THEMES = {
   aubergine: { name: 'Aubergine', bg: '#151019', deep: '#0f0b13', panel: '#1e1725', panel2: '#261d2f', hover: '#31263c', line: '#2a2033', text: '#f0e9f4', muted: '#9c90a8' },
   foret: { name: 'Forêt', bg: '#0e1512', deep: '#0a100d', panel: '#15201b', panel2: '#1b2822', hover: '#24342c', line: '#1d2a24', text: '#e7f1ec', muted: '#88a096' },
 };
+// Thème « Selon l'onglet » : l'interface prend les couleurs de chaque service
+const SERVICE_THEMES = {
+  youtube: { bg: '#0f0f0f', deep: '#0a0a0a', panel: '#212121', panel2: '#272727', hover: '#3d3d3d', line: '#272727', text: '#f1f1f1', muted: '#aaaaaa' },
+  discord: { bg: '#1e1f22', deep: '#18191c', panel: '#2b2d31', panel2: '#313338', hover: '#3f4147', line: '#26282c', text: '#f2f3f5', muted: '#949ba4' },
+  spotify: { bg: '#000000', deep: '#000000', panel: '#121212', panel2: '#1f1f1f', hover: '#2a2a2a', line: '#1a1a1a', text: '#ffffff', muted: '#b3b3b3' },
+  games: { bg: '#0f0e0b', deep: '#0a0907', panel: '#1a1813', panel2: '#211e17', hover: '#2b271e', line: '#24211a', text: '#f1ece2', muted: '#a29a88' },
+  netflix: { bg: '#141414', deep: '#0b0b0b', panel: '#1f1f1f', panel2: '#262626', hover: '#333333', line: '#2a2a2a', text: '#e5e5e5', muted: '#a3a3a3' },
+  disney: { bg: '#1a1d29', deep: '#13151f', panel: '#252a3c', panel2: '#2d3349', hover: '#3a415c', line: '#2a2f42', text: '#f9f9f9', muted: '#a8adc0' },
+  hbo: { bg: '#0b0a14', deep: '#07060e', panel: '#16142a', panel2: '#1e1b36', hover: '#29254a', line: '#1f1c35', text: '#f3f1fb', muted: '#9f9ab8' },
+  prime: { bg: '#0f171e', deep: '#0a1016', panel: '#1a242f', panel2: '#232f3e', hover: '#2e3c4e', line: '#233040', text: '#f2f4f6', muted: '#8197a4' },
+};
 const ACCENTS = ['#5b6cff', '#ff3b4e', '#1fdc6a', '#ffb21e', '#c06cff', '#22c3ee', '#ff6fb1', '#f4f4f8'];
 
 // Pages de connexion qui ont le droit de s'ouvrir en petite fenêtre pop-up
@@ -129,7 +139,8 @@ const DEFAULTS = {
   trayHintShown: false,
   startHidden: true,          // au démarrage de Windows : rester dans la zone de notification
   preloadAll: true,           // charger tous les services au lancement
-  theme: 'nuit',
+  theme: 'auto',              // 'auto' = selon l'onglet, sinon un des THEMES
+  themeVersion: 2,
   accentMode: 'service',      // 'service' (couleur du service ouvert) ou 'fixe'
   accent: '#5b6cff',
   showLabels: true,
@@ -156,7 +167,8 @@ function loadSettings() {
   // ordre : garder les services connus, ajouter les nouveaux à la fin
   const known = SERVICES.map((s) => s.id);
   settings.order = [...(settings.order || []).filter((id) => known.includes(id)), ...known.filter((id) => !(settings.order || []).includes(id))];
-  if (!THEMES[settings.theme]) settings.theme = 'nuit';
+  if (settings.themeVersion !== 2) { settings.theme = 'auto'; settings.themeVersion = 2; } // nouveau : thème par onglet
+  if (settings.theme !== 'auto' && !THEMES[settings.theme]) settings.theme = 'auto';
   if (!SERVICES.some((s) => settings.enabled[s.id])) settings.enabled.youtube = true;
 }
 function saveSettingsNow() {
@@ -184,7 +196,12 @@ const pageById = (id) => ALL_PAGES.find((s) => s.id === id);
 const visibleServices = () => settings.order.map((id) => SERVICES.find((s) => s.id === id)).filter((s) => s && settings.enabled[s.id]);
 const activeWc = () => (activeId && views[activeId] ? views[activeId].view.webContents : null);
 const wcOf = (id) => views[id]?.view.webContents;
-const theme = () => THEMES[settings.theme] || THEMES.nuit;
+// Couleurs d'une page : celles du service (thème automatique) ou le thème choisi
+function paletteFor(id) {
+  if (settings.theme !== 'auto') return THEMES[settings.theme] || THEMES.nuit;
+  return SERVICE_THEMES[id] || THEMES.nuit;
+}
+const theme = () => paletteFor(activeId || settings.lastService);
 
 function hostMatches(url, domains) {
   try {
@@ -200,29 +217,37 @@ function openExternal(url) {
 // ---------------------------------------------------------------------------
 // Thème : variables CSS injectées dans l'interface et les pages internes
 // ---------------------------------------------------------------------------
-function themeCss() {
-  const t = theme();
+function themeCss(t) {
   return `:root{--bg:${t.bg}!important;--deep:${t.deep}!important;--panel:${t.panel}!important;--panel2:${t.panel2}!important;`
     + `--hover:${t.hover}!important;--line:${t.line}!important;--text:${t.text}!important;--muted:${t.muted}!important;}`
     + `html,body{background:${t.bg}!important;}`;
 }
 const themeKeys = new Map();
-async function applyTheme(wc) {
+async function applyTheme(wc, t) {
   if (!wc || wc.isDestroyed()) return;
+  const css = themeCss(t);
   const old = themeKeys.get(wc.id);
-  if (old) await wc.removeInsertedCSS(old).catch(() => {});
-  try { themeKeys.set(wc.id, await wc.insertCSS(themeCss())); } catch { /* page en cours de chargement */ }
+  if (old && old.css === css) return;
+  try {
+    const key = await wc.insertCSS(css);
+    themeKeys.set(wc.id, { key, css });
+    if (old) wc.removeInsertedCSS(old.key).catch(() => {});
+  } catch { /* page en cours de chargement */ }
+}
+// Barre latérale, barre du haut et boutons de la fenêtre : couleurs de l'onglet ouvert
+function applyChromeTheme() {
+  if (!win || win.isDestroyed()) return;
+  const t = theme();
+  win.setBackgroundColor(t.bg);
+  try { win.setTitleBarOverlay({ color: t.bg, symbolColor: t.text, height: TOPBAR }); } catch { /* ignore */ }
+  applyTheme(win.webContents, t);
 }
 function applyThemeEverywhere() {
-  const t = theme();
-  if (win && !win.isDestroyed()) {
-    win.setBackgroundColor(t.bg);
-    try { win.setTitleBarOverlay({ color: t.bg, symbolColor: t.text, height: TOPBAR }); } catch { /* ignore */ }
-    applyTheme(win.webContents);
-  }
+  applyChromeTheme();
   for (const [id, st] of Object.entries(views)) {
+    const t = paletteFor(id);
     st.view.setBackgroundColor(t.bg);
-    if (pageById(id)?.local) applyTheme(st.view.webContents);
+    if (pageById(id)?.local) applyTheme(st.view.webContents, t);
   }
 }
 
@@ -316,7 +341,7 @@ function createView(service) {
       ...(service.local ? { autoplayPolicy: 'no-user-gesture-required' } : {}),
     },
   });
-  view.setBackgroundColor(theme().bg);
+  view.setBackgroundColor(paletteFor(service.id).bg);
   view.setVisible(false);
   win.contentView.addChildView(view);
 
@@ -330,7 +355,7 @@ function createView(service) {
     wc.on('will-navigate', (e, url) => {
       if (!url.startsWith('poseyhub://')) { e.preventDefault(); openExternal(url); }
     });
-    wc.on('dom-ready', () => applyTheme(wc));
+    wc.on('dom-ready', () => applyTheme(wc, paletteFor(service.id)));
   }
 
   wc.setWindowOpenHandler(({ url }) => {
@@ -422,6 +447,7 @@ function switchTo(id) {
   if (!views[id]) createView(service);
   if (activeId !== id && activeId !== 'settings') previousId = activeId;
   activeId = id;
+  if (settings.theme === 'auto') applyChromeTheme();
   if (!service.page) { settings.lastService = id; saveSettings(); }
   for (const [k, st] of Object.entries(views)) st.view.setVisible(k === id);
   layout();
@@ -564,41 +590,6 @@ function serviceMenu(id) {
 }
 
 // ---------------------------------------------------------------------------
-// Spotify (connexion officielle) — seulement depuis la page Spotify de l'appli
-// ---------------------------------------------------------------------------
-const spHandle = (channel, fn) => ipcMain.handle(channel, (e, ...args) => {
-  if (e.sender !== wcOf('spotify')) throw new Error('Accès refusé');
-  return fn(...args);
-});
-spHandle('sp:status', () => spotify.status());
-spHandle('sp:setClientId', (id) => spotify.setClientId(id));
-spHandle('sp:login', async () => {
-  try {
-    const st = await spotify.login();
-    showWindow();
-    switchTo('spotify');
-    return { ok: true, status: st };
-  } catch (e) {
-    return { ok: false, error: e.message };
-  }
-});
-spHandle('sp:logout', () => spotify.logout());
-spHandle('sp:reset', () => spotify.resetAll());
-spHandle('sp:api', (method, p, opts) => spotify.api(method, p, opts));
-spHandle('sp:token', async () => { try { return await spotify.getToken(); } catch { return null; } });
-spHandle('sp:open', (what) => {
-  const targets = { dashboard: 'https://developer.spotify.com/dashboard', app: 'spotify:' };
-  if (targets[what]) shell.openExternal(targets[what]).catch(() => {
-    if (what === 'app') shell.openExternal('https://www.spotify.com/download/');
-  });
-});
-spotify.onChange((st) => {
-  const wc = wcOf('spotify');
-  if (wc && !wc.isDestroyed()) wc.send('sp:changed', st);
-  pushSettings();
-});
-
-// ---------------------------------------------------------------------------
 // Gaming Hub — seulement depuis la page Jeux de l'appli
 // ---------------------------------------------------------------------------
 const gHandle = (channel, fn) => ipcMain.handle(channel, (e, ...args) => {
@@ -710,7 +701,10 @@ async function settingsSnapshot() {
       zoom: settings.zoom, vencord: settings.vencord,
     },
     login: loginItem().openAtLogin,
-    themes: Object.entries(THEMES).map(([id, t]) => ({ id, ...t })),
+    themes: [
+      { id: 'auto', name: 'Selon l’onglet', auto: true, swatches: SERVICES.map((sv) => ({ bg: (SERVICE_THEMES[sv.id] || THEMES.nuit).bg, c: sv.color })) },
+      ...Object.entries(THEMES).map(([id, t]) => ({ id, ...t })),
+    ],
     accents: ACCENTS,
     services: settings.order.map((id) => SERVICES.find((s) => s.id === id)).filter(Boolean).map((s) => ({
       id: s.id, name: s.name, color: s.color,
@@ -718,7 +712,6 @@ async function settingsSnapshot() {
       loaded: !!views[s.id], local: !!s.local, group: s.group || 'main',
     })),
     update: updater.state(),
-    spotify: spotify.status(),
     games: {
       count: gl.games.filter((g) => !g.hidden).length,
       hidden: gl.games.filter((g) => g.hidden).length,
@@ -744,7 +737,7 @@ function setSetting(key, value, id) {
     case 'alwaysOnTop':
       settings.alwaysOnTop = !!value; win?.setAlwaysOnTop(!!value); break;
     case 'theme':
-      if (!THEMES[value]) return;
+      if (value !== 'auto' && !THEMES[value]) return;
       settings.theme = value; applyThemeEverywhere(); break;
     case 'accentMode':
       settings.accentMode = value === 'fixe' ? 'fixe' : 'service'; break;
@@ -812,8 +805,6 @@ async function settingsAction(name, arg) {
         'try{Vencord.Webpack.Common.SettingsRouter.open("VencordSettings");true}catch(e){false}'
       ).catch(() => {});
       break;
-    case 'spotifyReset': spotify.resetAll(); switchTo('spotify'); break;
-    case 'spotifyLogout': spotify.logout(); break;
     case 'gamesScan': games.scan().catch(() => {}); break;
     case 'gamesUnhide': games.unhideAll(); break;
     case 'openData': shell.openPath(app.getPath('userData')); break;
@@ -857,7 +848,6 @@ async function logout(service) {
     detail: 'Les cookies et données de connexion de ce service seront effacés.',
   });
   if (response !== 0) return null;
-  if (service.id === 'spotify') spotify.logout();
   await session.fromPartition('persist:' + service.id).clearStorageData();
   wcOf(service.id)?.loadURL(service.url);
   return `Déconnecté de ${service.name}`;
@@ -895,14 +885,21 @@ function buildTray() {
     ...list.map((s, i) => ({ label: `${s.name}\tCtrl+${i + 1}`, click: () => { showWindow(); switchTo(s.id); } })),
     ...(settings.enabled.spotify ? [
       { type: 'separator' },
-      { label: 'Spotify : lecture / pause', click: () => spotify.control('playpause').catch(() => {}) },
-      { label: 'Spotify : titre suivant', click: () => spotify.control('next').catch(() => {}) },
-      { label: 'Spotify : titre précédent', click: () => spotify.control('previous').catch(() => {}) },
+      { label: 'Spotify : lecture / pause', click: () => spotifyButton('control-button-playpause') },
+      { label: 'Spotify : titre suivant', click: () => spotifyButton('control-button-skip-forward') },
+      { label: 'Spotify : titre précédent', click: () => spotifyButton('control-button-skip-back') },
     ] : []),
     { type: 'separator' },
     { label: 'Réglages', click: () => { showWindow(); switchTo('settings'); } },
     { label: 'Quitter Simply Hub', click: quitApp },
   ]));
+}
+
+// Clique sur un bouton du lecteur web officiel de Spotify (s'il est ouvert)
+function spotifyButton(testId) {
+  const wc = wcOf('spotify');
+  if (!wc || wc.isDestroyed()) return;
+  wc.executeJavaScript(`(() => { const b = document.querySelector('[data-testid="${testId}"]'); if (b) b.click(); })()`).catch(() => {});
 }
 
 function createTray() {
@@ -957,7 +954,7 @@ function createWindow() {
   Menu.setApplicationMenu(null);
   win.loadFile(path.join(__dirname, 'index.html'));
   win.webContents.on('before-input-event', handleShortcut);
-  win.webContents.on('dom-ready', () => applyTheme(win.webContents));
+  win.webContents.on('dom-ready', () => { themeKeys.delete(win.webContents.id); applyChromeTheme(); });
 
   win.once('ready-to-show', () => {
     if (settings.maximized) win.maximize();
@@ -1014,7 +1011,6 @@ if (!app.requestSingleInstanceLock()) {
     }
 
     loadSettings();
-    spotify.init();
     games.load(app.getPath('userData'));
     vencord.init(app.getPath('userData'));
     setTimeout(() => games.scan().catch(() => {}), 4000); // recherche des jeux installés en arrière-plan
