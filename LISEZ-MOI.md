@@ -54,6 +54,7 @@ L'onglet Spotify affiche le **lecteur web officiel** (open.spotify.com) : connec
 | `Ctrl+1` à `Ctrl+8` | YouTube, Discord, Spotify, Jeux, Netflix, Disney+, HBO Max, Prime Video (selon l'ordre choisi) |
 | `Ctrl+Tab` | Service suivant |
 | `Ctrl+,` | Réglages |
+| `Ctrl+L` ou `Ctrl+K` | Barre de recherche (onglet Recherche) |
 | `Ctrl+M` | Couper / remettre le son du service ouvert |
 | `Ctrl+R` ou `F5` | Actualiser |
 | `Alt+←` / `Alt+→` | Page précédente / suivante |
@@ -103,6 +104,21 @@ La signature est gratuite. Elle se fait toute seule sur GitHub une fois ton comp
 Dans **Réglages → Streaming**, la ligne « Protection vidéo » indique si ta version est signée.
 
 Même signée, la qualité peut être limitée (souvent 720p à 1080p selon la plateforme), comme dans un navigateur Chrome.
+
+---
+
+## Recherche
+
+L'onglet **Recherche** (icône loupe) affiche la page officielle du moteur de recherche que tu choisis :
+Google, Bing, DuckDuckGo, Qwant, Ecosia, Brave Search, Startpage, Yahoo, Perplexity, Lilo, Yandex, Kagi, ou un **moteur personnalisé**.
+
+- **Changer de moteur à tout moment :**
+  - le bouton du moteur (à gauche de la barre du haut) ;
+  - un clic droit sur l'icône loupe → *Moteur de recherche* ;
+  - **Réglages → Recherche**.
+- **Barre du haut :** tape une recherche ou une adresse de site, puis `Entrée`. Le raccourci `Ctrl+L` (ou `Ctrl+K`) y mène depuis n'importe quel onglet.
+- **Liens des résultats :** ils s'ouvrent dans l'onglet, comme dans un navigateur.
+- **Moteur personnalisé :** donne sa page d'accueil et, si tu veux, son adresse de recherche avec `%s` à la place du texte (ex. `https://www.exemple.com/search?q=%s`).
 
 ---
 

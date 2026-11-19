@@ -92,7 +92,7 @@
   h2 { font: 700 clamp(32px, 4vw, 46px)/1.05 var(--f-titre); margin: 0 0 12px; }
   .chapeau { color: var(--brume); max-width: 40em; margin: 0 0 40px; }
 
-  .trio { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; padding-top: 30px; }
+  .trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; row-gap: 64px; padding-top: 30px; }
   @media (max-width: 1100px) { .trio { grid-template-columns: repeat(3, 1fr); row-gap: 60px; } }
   @media (max-width: 760px) { .trio { grid-template-columns: repeat(2, 1fr); } }
   .service { --c: var(--brume); background: var(--encre); border-radius: 22px; padding: 26px 22px 22px; position: relative;
@@ -229,6 +229,12 @@
         <h3>Streaming</h3>
         <p>Netflix, Disney+, HBO Max et Prime Video, chacun avec sa connexion. Ils ne se chargent que quand tu les ouvres.</p>
         <span class="plus">Ctrl + 5 à 8</span>
+      </div>
+      <div class="service" style="--c: #4285f4">
+        <div class="rond"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/></svg></div>
+        <h3>Recherche</h3>
+        <p>Le moteur de ton choix : Google, Bing, DuckDuckGo, Qwant, Ecosia, Brave, Perplexity… Tu en changes en un clic.</p>
+        <span class="plus">Ctrl + L</span>
       </div>
     </div>
   </section>

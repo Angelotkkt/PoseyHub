@@ -8,6 +8,9 @@ contextBridge.exposeInMainWorld('hub', {
   mute: (id) => ipcRenderer.send('mute', id),
   serviceMenu: (id) => ipcRenderer.send('service-menu', id),
   installUpdate: () => ipcRenderer.send('update-install'),
+  engineMenu: () => ipcRenderer.send('engine-menu'),
+  search: (text) => ipcRenderer.send('search-go', text),
+  onFocusSearch: (cb) => ipcRenderer.on('focus-search', () => cb()),
   getState: () => ipcRenderer.invoke('get-state'),
   onState: (cb) => ipcRenderer.on('state', (_e, s) => cb(s)),
 });

@@ -82,6 +82,11 @@ const SERVICES = [
     url: 'https://www.primevideo.com/',
     domains: ['primevideo.com', 'amazon.com', 'amazon.fr', 'amazon.de', 'amazon.co.uk', 'amazon.es', 'amazon.it', 'media-amazon.com', 'aiv-cdn.net', 'aiv-delivery.net'],
   },
+  {
+    // Moteur de recherche au choix (page officielle). Les liens s'ouvrent dans l'onglet, comme un navigateur.
+    id: 'search', name: 'Recherche', color: '#4285f4', group: 'web', browser: true,
+    url: 'https://www.google.com/', domains: [],
+  },
 ];
 // Page Réglages : s'affiche comme un service, mais n'apparaît pas dans la liste
 const SETTINGS_PAGE = {
@@ -109,6 +114,38 @@ const SERVICE_THEMES = {
   hbo: { bg: '#0b0a14', deep: '#07060e', panel: '#16142a', panel2: '#1e1b36', hover: '#29254a', line: '#1f1c35', text: '#f3f1fb', muted: '#9f9ab8' },
   prime: { bg: '#0f171e', deep: '#0a1016', panel: '#1a242f', panel2: '#232f3e', hover: '#2e3c4e', line: '#233040', text: '#f2f4f6', muted: '#8197a4' },
 };
+// Moteurs de recherche de l'onglet « Recherche » (pages officielles). %s = texte recherché
+const ENGINES = [
+  { id: 'google', name: 'Google', color: '#4285f4', bg: '#1f1f1f', desc: 'Le moteur le plus utilisé', home: 'https://www.google.com/', search: 'https://www.google.com/search?q=%s' },
+  { id: 'bing', name: 'Bing', color: '#0c8484', bg: '#1b1a19', desc: 'Le moteur de Microsoft', home: 'https://www.bing.com/', search: 'https://www.bing.com/search?q=%s' },
+  { id: 'duckduckgo', name: 'DuckDuckGo', color: '#de5833', bg: '#1c1c1c', desc: 'Ne te piste pas', home: 'https://duckduckgo.com/', search: 'https://duckduckgo.com/?q=%s' },
+  { id: 'qwant', name: 'Qwant', color: '#5c6cff', bg: '#141621', desc: 'Français, respecte la vie privée', home: 'https://www.qwant.com/', search: 'https://www.qwant.com/?q=%s' },
+  { id: 'ecosia', name: 'Ecosia', color: '#2ea86b', bg: '#151a17', desc: 'Finance des arbres avec ses revenus', home: 'https://www.ecosia.org/', search: 'https://www.ecosia.org/search?q=%s' },
+  { id: 'brave', name: 'Brave Search', color: '#fb542b', bg: '#14151d', desc: 'Son propre index, sans pistage', home: 'https://search.brave.com/', search: 'https://search.brave.com/search?q=%s' },
+  { id: 'startpage', name: 'Startpage', color: '#6573ff', bg: '#171a29', desc: 'Résultats de Google, en privé', home: 'https://www.startpage.com/', search: 'https://www.startpage.com/sp/search?query=%s' },
+  { id: 'yahoo', name: 'Yahoo', color: '#7e1fff', bg: '#17141f', desc: 'Recherche et actualités', home: 'https://search.yahoo.com/', search: 'https://search.yahoo.com/search?p=%s' },
+  { id: 'perplexity', name: 'Perplexity', color: '#20a0a8', bg: '#191a1a', desc: 'Réponses par IA, avec les sources', home: 'https://www.perplexity.ai/', search: 'https://www.perplexity.ai/search?q=%s' },
+  { id: 'lilo', name: 'Lilo', color: '#16b39a', bg: '#141a19', desc: 'Français, finance des projets solidaires', home: 'https://search.lilo.org/', search: 'https://search.lilo.org/?q=%s' },
+  { id: 'yandex', name: 'Yandex', color: '#fc3f1d', bg: '#1c1c1c', desc: 'Moteur international', home: 'https://yandex.com/', search: 'https://yandex.com/search/?text=%s' },
+  { id: 'kagi', name: 'Kagi', color: '#ffb319', bg: '#1a1b20', desc: 'Payant, sans publicité', home: 'https://kagi.com/', search: 'https://kagi.com/search?q=%s' },
+];
+function engine() {
+  const c = settings.customEngine;
+  if (settings.searchEngine === 'custom' && c?.home) {
+    return { id: 'custom', name: c.name || 'Personnalisé', color: '#9aa0b4', bg: '#141418', desc: 'Moteur personnalisé', home: c.home, search: c.search || '' };
+  }
+  return ENGINES.find((e) => e.id === settings.searchEngine) || ENGINES[0];
+}
+function normalizeUrl(u) {
+  u = String(u || '').trim();
+  if (!u) return null;
+  if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+  try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.toString() : null; } catch { return null; }
+}
+// Adresse de départ et couleur d'un service (l'onglet Recherche dépend du moteur choisi)
+const urlOf = (s) => (s.id === 'search' ? engine().home : s.url);
+const colorOf = (s) => (s.id === 'search' ? engine().color : s.color);
+
 const ACCENTS = ['#5b6cff', '#ff3b4e', '#1fdc6a', '#ffb21e', '#c06cff', '#22c3ee', '#ff6fb1', '#f4f4f8'];
 
 // Pages de connexion qui ont le droit de s'ouvrir en petite fenêtre pop-up
@@ -147,6 +184,8 @@ const DEFAULTS = {
   badges: true,
   taskbarBadge: true,
   zoom: 100,
+  searchEngine: 'google',
+  customEngine: null,         // { name, home, search }
   vencord: true,
   order: SERVICES.map((s) => s.id),
   enabled: Object.fromEntries(SERVICES.map((s) => [s.id, true])),
@@ -197,8 +236,16 @@ const visibleServices = () => settings.order.map((id) => SERVICES.find((s) => s.
 const activeWc = () => (activeId && views[activeId] ? views[activeId].view.webContents : null);
 const wcOf = (id) => views[id]?.view.webContents;
 // Couleurs d'une page : celles du service (thème automatique) ou le thème choisi
+function lighten(hex, amount) {
+  const n = parseInt(hex.slice(1), 16);
+  return '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) => Math.round(c + (255 - c) * amount).toString(16).padStart(2, '0')).join('');
+}
+function derivePalette(bg) {
+  return { bg, deep: bg, panel: lighten(bg, 0.06), panel2: lighten(bg, 0.1), hover: lighten(bg, 0.17), line: lighten(bg, 0.08), text: '#ececf1', muted: '#9c9cab' };
+}
 function paletteFor(id) {
   if (settings.theme !== 'auto') return THEMES[settings.theme] || THEMES.nuit;
+  if (id === 'search') return derivePalette(engine().bg);
   return SERVICE_THEMES[id] || THEMES.nuit;
 }
 const theme = () => paletteFor(activeId || settings.lastService);
@@ -360,6 +407,7 @@ function createView(service) {
 
   wc.setWindowOpenHandler(({ url }) => {
     if (service.local) { openExternal(url); return { action: 'deny' }; }
+    if (service.browser && /^https?:/i.test(url) && !hostMatches(url, LOGIN_HOSTS)) { wc.loadURL(url); return { action: 'deny' }; }
     if (!url || url === 'about:blank' || hostMatches(url, LOGIN_HOSTS)) {
       return {
         action: 'allow',
@@ -392,6 +440,10 @@ function createView(service) {
   wc.on('did-start-loading', () => { st.loading = true; sendState(); });
   wc.on('did-stop-loading', () => { st.loading = false; sendState(); });
   wc.on('did-finish-load', () => applyZoom(wc));
+  if (service.browser) {
+    wc.on('did-navigate', () => sendState());
+    wc.on('did-navigate-in-page', () => sendState());
+  }
   wc.on('audio-state-changed', () => sendState());
 
   // Plein écran des vidéos (YouTube, Discord…)
@@ -403,12 +455,12 @@ function createView(service) {
 
   wc.on('did-fail-load', (_e, code, _desc, _url, isMainFrame) => {
     if (isMainFrame && code !== -3 && !service.local) {   // -3 = navigation annulée (normal)
-      wc.loadFile(path.join(__dirname, 'offline.html'), { query: { url: service.url, name: service.name } });
+      wc.loadFile(path.join(__dirname, 'offline.html'), { query: { url: urlOf(service), name: service.name } });
     }
   });
   wc.on('render-process-gone', () => setTimeout(() => { if (!wc.isDestroyed()) wc.reload(); }, 1000));
 
-  wc.loadURL(service.url);
+  wc.loadURL(urlOf(service));
   layout();
   return st;
 }
@@ -468,7 +520,7 @@ function navigate(action) {
     case 'back': if (h.canGoBack()) h.goBack(); break;
     case 'forward': if (h.canGoForward()) h.goForward(); break;
     case 'reload': wc.reload(); break;
-    case 'home': wc.loadURL(pageById(activeId).url); break;
+    case 'home': wc.loadURL(urlOf(pageById(activeId))); break;
   }
 }
 
@@ -484,7 +536,7 @@ function setMuted(id, value) {
 // Raccourcis clavier
 //   Ctrl+1…9 : changer de service   Ctrl+Tab : service suivant   Ctrl+, : réglages
 //   Ctrl+R / F5 : actualiser        Alt+← / Alt+→ : précédent / suivant
-//   Ctrl+M : couper le son          F11 : plein écran            Ctrl+Shift+I : outils de dev
+//   Ctrl+L / Ctrl+K : recherche     Ctrl+M : couper le son          F11 : plein écran            Ctrl+Shift+I : outils de dev
 // ---------------------------------------------------------------------------
 function handleShortcut(event, input) {
   if (input.type !== 'keyDown') return;
@@ -498,6 +550,11 @@ function handleShortcut(event, input) {
     switchTo(list[next].id);
   }
   else if (input.control && (key === ',' || key === ';')) toggleSettings();
+  else if (input.control && !input.shift && ['l', 'k'].includes(key.toLowerCase()) && settings.enabled.search) {
+    switchTo('search');
+    win.webContents.focus();
+    win.webContents.send('focus-search');
+  }
   else if (input.control && !input.shift && key.toLowerCase() === 'm' && activeId && activeId !== 'settings') setMuted(activeId, !settings.muted[activeId]);
   else if ((input.control && !input.shift && key.toLowerCase() === 'r') || key === 'F5') navigate('reload');
   else if (input.alt && key === 'ArrowLeft') navigate('back');
@@ -546,7 +603,7 @@ function showContextMenu(wc, p) {
 function buildState() {
   const u = updater.state();
   const services = visibleServices().map((s) => ({
-    id: s.id, name: s.name, color: s.color, group: s.group || 'main',
+    id: s.id, name: s.name, color: colorOf(s), group: s.group || 'main',
     badge: settings.badges ? (views[s.id]?.badge || 0) : 0,
     loading: !!views[s.id]?.loading,
     title: views[s.id]?.title || s.name,
@@ -557,7 +614,13 @@ function buildState() {
   return {
     active: activeId,
     services,
-    page: page ? { id: page.id, name: page.name, color: page.color, title: views[page.id]?.title || page.name, loading: !!views[page.id]?.loading, muted: !!settings.muted[page.id], isPage: !!page.page } : null,
+    page: page ? {
+      id: page.id, name: page.name, color: colorOf(page), title: views[page.id]?.title || page.name,
+      loading: !!views[page.id]?.loading, muted: !!settings.muted[page.id], isPage: !!page.page,
+      browser: !!page.browser,
+      url: page.browser ? (wcOf(page.id)?.getURL() || '') : '',
+      engine: page.id === 'search' ? { id: engine().id, name: engine().name, color: engine().color } : null,
+    } : null,
     ui: { showLabels: settings.showLabels, accentMode: settings.accentMode, accent: settings.accent },
     update: { status: u.status, version: u.version, percent: u.percent || 0 },
   };
@@ -572,6 +635,40 @@ ipcMain.on('menu', () => toggleSettings());
 ipcMain.on('mute', (_e, id) => { if (pageById(id) && !pageById(id).page) setMuted(id, !settings.muted[id]); });
 ipcMain.on('update-install', () => updater.installNow());
 ipcMain.on('service-menu', (_e, id) => serviceMenu(id));
+ipcMain.on('engine-menu', () => engineMenu());
+ipcMain.on('search-go', (_e, text) => searchGo(text));
+
+// Recherche ou adresse tapée dans la barre du haut
+function searchGo(text) {
+  text = String(text || '').trim();
+  const s = SERVICES.find((x) => x.id === 'search');
+  if (!text || !settings.enabled.search) return;
+  let url;
+  const isUrl = /^https?:\/\//i.test(text) || (!/\s/.test(text) && /^[\w-]+(\.[\w-]+)+(:\d+)?(\/\S*)?$/.test(text));
+  if (isUrl) url = normalizeUrl(text);
+  else {
+    const e = engine();
+    url = e.search ? e.search.replace('%s', encodeURIComponent(text)) : e.home;
+  }
+  if (!url) return;
+  if (!views.search) createView(s);
+  switchTo('search');
+  wcOf('search')?.loadURL(url);
+}
+
+function setEngine(id) { setSetting('searchEngine', id); }
+function engineMenu() {
+  const cur = engine().id;
+  const items = ENGINES.map((e) => ({ label: `${e.name}  —  ${e.desc}`, type: 'radio', checked: cur === e.id, click: () => setEngine(e.id) }));
+  if (settings.customEngine?.home) items.push({ label: `${settings.customEngine.name || 'Personnalisé'}  —  moteur personnalisé`, type: 'radio', checked: cur === 'custom', click: () => setEngine('custom') });
+  Menu.buildFromTemplate([
+    { label: 'Moteur de recherche', enabled: false },
+    { type: 'separator' },
+    ...items,
+    { type: 'separator' },
+    { label: 'Ajouter un moteur personnalisé…', click: () => { switchTo('settings'); wcOf('settings')?.executeJavaScript("location.hash='search'").catch(() => {}); } },
+  ]).popup({ window: win });
+}
 ipcMain.handle('get-state', () => buildState());
 
 function serviceMenu(id) {
@@ -580,6 +677,13 @@ function serviceMenu(id) {
   Menu.buildFromTemplate([
     { label: s.name, enabled: false },
     { type: 'separator' },
+    ...(id === 'search' ? [
+      { label: 'Moteur de recherche', submenu: [
+        ...ENGINES.map((e) => ({ label: e.name, type: 'radio', checked: engine().id === e.id, click: () => setEngine(e.id) })),
+        ...(settings.customEngine?.home ? [{ label: settings.customEngine.name || 'Personnalisé', type: 'radio', checked: engine().id === 'custom', click: () => setEngine('custom') }] : []),
+      ] },
+      { type: 'separator' },
+    ] : []),
     { label: 'Actualiser', click: () => wcOf(id)?.reload() },
     { label: settings.muted[id] ? 'Réactiver le son' : 'Couper le son', click: () => setMuted(id, !settings.muted[id]) },
     { label: 'Notifications Windows', type: 'checkbox', checked: !!settings.notifications[id], click: (m) => setSetting('notifications', m.checked, id) },
@@ -694,10 +798,15 @@ async function settingsSnapshot() {
       site: updater.SITE,
     },
     drm: drmStatus(),
+    search: {
+      engine: engine().id,
+      engines: ENGINES.map(({ id, name, color, desc, home }) => ({ id, name, color, desc, home })),
+      custom: settings.customEngine,
+    },
     settings: {
       closeToTray: settings.closeToTray, alwaysOnTop: settings.alwaysOnTop, startHidden: settings.startHidden,
       preloadAll: settings.preloadAll, theme: settings.theme, accentMode: settings.accentMode, accent: settings.accent,
-      showLabels: settings.showLabels, badges: settings.badges, taskbarBadge: settings.taskbarBadge,
+      showLabels: settings.showLabels, badges: settings.badges, taskbarBadge: settings.taskbarBadge, searchEngine: settings.searchEngine,
       zoom: settings.zoom, vencord: settings.vencord,
     },
     login: loginItem().openAtLogin,
@@ -707,7 +816,7 @@ async function settingsSnapshot() {
     ],
     accents: ACCENTS,
     services: settings.order.map((id) => SERVICES.find((s) => s.id === id)).filter(Boolean).map((s) => ({
-      id: s.id, name: s.name, color: s.color,
+      id: s.id, name: s.name, color: colorOf(s),
       enabled: !!settings.enabled[s.id], notifications: !!settings.notifications[s.id], muted: !!settings.muted[s.id],
       loaded: !!views[s.id], local: !!s.local, group: s.group || 'main',
     })),
@@ -776,6 +885,26 @@ function setSetting(key, value, id) {
       settings.order = [...value.filter((x) => SERVICES.some((s) => s.id === x)), ...settings.order.filter((x) => !value.includes(x))];
       buildTray();
       break;
+    case 'searchEngine': {
+      if (value !== 'custom' && !ENGINES.some((e) => e.id === value)) return;
+      if (value === 'custom' && !settings.customEngine?.home) return;
+      settings.searchEngine = value;
+      wcOf('search')?.loadURL(engine().home);
+      applyThemeEverywhere();
+      break;
+    }
+    case 'customEngine': {
+      const home = normalizeUrl(value?.home);
+      if (!home) return;
+      const search = String(value?.search || '').includes('%s') ? normalizeUrl(String(value.search).replace('%s', 'POSEYQUERY'))?.replace('POSEYQUERY', '%s') : '';
+      let name = String(value?.name || '').trim().slice(0, 30);
+      if (!name) name = new URL(home).hostname.replace(/^www\./, '');
+      settings.customEngine = { name, home, search: search || '' };
+      settings.searchEngine = 'custom';
+      wcOf('search')?.loadURL(home);
+      applyThemeEverywhere();
+      break;
+    }
     case 'gamesMinimize':
       games.setMinimize(!!value); break;
     default:
@@ -849,7 +978,7 @@ async function logout(service) {
   });
   if (response !== 0) return null;
   await session.fromPartition('persist:' + service.id).clearStorageData();
-  wcOf(service.id)?.loadURL(service.url);
+  wcOf(service.id)?.loadURL(urlOf(service));
   return `Déconnecté de ${service.name}`;
 }
 
