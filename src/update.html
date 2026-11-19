@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+<title>Mise à jour</title>
+<style>
+  :root {
+    --bg: #0f0f14; --deep: #0a0a0f; --panel: #17171f; --panel2: #1d1d27; --hover: #25252f; --line: #22222c;
+    --text: #e9e9f1; --muted: #8b8b9c;
+    --c1: #ff3b4e; --c2: #5b6cff; --c3: #1fdc6a; --c4: #ffb21e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: transparent !important; overflow: hidden; color: var(--text);
+    font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; font-size: 14px; user-select: none; }
+  button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; outline: none; }
+  button:focus-visible { box-shadow: 0 0 0 3px rgba(255,255,255,.35) !important; }
+  .notes::-webkit-scrollbar { width: 8px; } .notes::-webkit-scrollbar-thumb { background: var(--hover); border-radius: 4px; }
+  svg { display: block; }
+
+  .backdrop { position: fixed; inset: 0; background: rgba(4, 4, 8, .62); display: grid; place-items: center; padding: 24px;
+    animation: fade .22s ease both; }
+  .card { position: relative; width: min(500px, 100%); max-height: calc(100vh - 48px); overflow: hidden auto; border-radius: 24px;
+    background: var(--panel); border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
+    box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.4); animation: pop .32s cubic-bezier(.2,1.2,.3,1) both; }
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes pop { from { opacity: 0; transform: translateY(14px) scale(.96); } }
+  .closing .backdrop { animation: fadeout .18s ease both; }
+  .closing .card { animation: popout .18s ease both; }
+  @keyframes fadeout { to { opacity: 0; } }
+  @keyframes popout { to { opacity: 0; transform: translateY(8px) scale(.97); } }
+
+  /* En-tête : couleurs des services qui bougent doucement */
+  .hero { position: relative; height: 136px; overflow: hidden; background: var(--deep); display: grid; place-items: center; }
+  .hero .blob { position: absolute; width: 220px; height: 220px; border-radius: 50%; filter: blur(48px); opacity: .55; animation: drift 9s ease-in-out infinite alternate; }
+  .hero .b1 { background: var(--c1); left: -40px; top: -90px; }
+  .hero .b2 { background: var(--c2); right: -50px; top: -70px; animation-delay: -3s; }
+  .hero .b3 { background: var(--c3); left: 60px; bottom: -140px; animation-delay: -5s; }
+  .hero .b4 { background: var(--c4); right: 40px; bottom: -150px; animation-delay: -7s; }
+  @keyframes drift { to { transform: translate(30px, 20px) scale(1.12); } }
+  .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, var(--panel)); }
+  .logo { position: relative; z-index: 1; width: 84px; height: 84px; border-radius: 26px; display: grid; place-items: center;
+    background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16); backdrop-filter: blur(12px);
+    box-shadow: 0 16px 40px rgba(0,0,0,.45); }
+  .logo img { width: 62px; height: 62px; border-radius: 18px; }
+  .logo .spin { position: absolute; inset: -6px; border-radius: 30px; border: 3px solid transparent; border-top-color: #fff; border-right-color: rgba(255,255,255,.35);
+    animation: rot 1s linear infinite; display: none; }
+  .checking .logo .spin { display: block; }
+  @keyframes rot { to { transform: rotate(360deg); } }
+  .badge { position: absolute; z-index: 2; right: -8px; bottom: -8px; width: 30px; height: 30px; border-radius: 50%; display: none; place-items: center;
+    border: 3px solid var(--panel); color: #fff; }
+  .badge svg { width: 15px; height: 15px; }
+  .badge.show { display: grid; }
+
+  .body { padding: 4px 30px 26px; text-align: center; }
+  .kicker { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: .3px; }
+  .ver { display: inline-flex; align-items: center; gap: 8px; margin-top: 2px; }
+  .ver span { padding: 3px 10px; border-radius: 999px; background: var(--panel2); font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .ver span.new { background: linear-gradient(90deg, var(--c2), var(--c3)); color: #fff; }
+  .ver svg { width: 14px; height: 14px; color: var(--muted); }
+  h1 { font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; font-size: 25px; font-weight: 750; letter-spacing: -.4px; margin: 12px 0 6px; line-height: 1.15; }
+  p.sub { color: var(--muted); line-height: 1.55; max-width: 380px; margin: 0 auto; }
+
+  .progress { margin: 20px auto 0; max-width: 360px; display: none; }
+  .downloading .progress { display: block; }
+  .bar { height: 8px; border-radius: 999px; background: var(--panel2); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--c1), var(--c2), var(--c3), var(--c4));
+    background-size: 200% 100%; animation: flow 2.4s linear infinite; transition: width .4s ease; }
+  @keyframes flow { to { background-position: -200% 0; } }
+  .pct { margin-top: 8px; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .notes { margin: 18px 0 0; max-height: 32vh; overflow-y: auto; text-align: left; background: var(--panel2); border: 1px solid var(--line); border-radius: 16px; padding: 6px; display: none; }
+  .notes.show { display: block; }
+  .notes h3 { font-size: 11.5px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); padding: 10px 12px 6px; }
+  .note { display: flex; gap: 12px; padding: 9px 12px; border-radius: 11px; line-height: 1.45; font-size: 13.5px; }
+  .note:hover { background: var(--hover); }
+  .note .ic { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; flex: none; color: #fff; }
+  .note .ic svg { width: 16px; height: 16px; }
+
+  .actions { display: flex; flex-direction: column; gap: 6px; margin-top: 18px; }
+  .primary { height: 46px; border-radius: 14px; font-weight: 750; font-size: 15px; color: #fff; display: flex; align-items: center; justify-content: center; gap: 9px;
+    background: linear-gradient(90deg, var(--c2), color-mix(in srgb, var(--c2) 55%, var(--c3))); box-shadow: 0 10px 26px color-mix(in srgb, var(--c2) 40%, transparent);
+    transition: transform .12s, filter .12s; }
+  .primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .primary:active { transform: translateY(1px); }
+  .primary svg { width: 17px; height: 17px; }
+  .secondary { height: 40px; border-radius: 12px; color: var(--muted); font-weight: 650; }
+  .secondary:hover { background: var(--panel2); color: var(--text); }
+  .foot { margin-top: 12px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .x { position: absolute; z-index: 3; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; color: rgba(255,255,255,.8);
+    background: rgba(0,0,0,.25); }
+  .x:hover { background: rgba(0,0,0,.45); color: #fff; }
+  .x svg { width: 16px; height: 16px; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="backdrop" id="backdrop">
+  <div class="card" id="card" role="dialog" aria-modal="true" aria-labelledby="title">
+    <button class="x" id="x" title="Fermer (Échap)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="hero">
+      <i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i><i class="blob b4"></i>
+      <div class="logo"><img src="../assets/logo-small.png" alt=""><i class="spin"></i><span class="badge" id="badge"></span></div>
+    </div>
+    <div class="body">
+      <div class="kicker" id="kicker"></div>
+      <h1 id="title"></h1>
+      <p class="sub" id="sub"></p>
+      <div class="progress"><div class="bar"><i id="bar"></i></div><div class="pct" id="pct"></div></div>
+      <div class="notes" id="notes"></div>
+      <div class="actions" id="actions"></div>
+      <div class="foot" id="foot"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ICONS = {
+  design: ['#c06cff', '<path d="M12 3a9 9 0 1 0 0 18c1.2 0 2-.9 2-2 0-.6-.2-1-.5-1.4-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.3A4.7 4.7 0 0 0 21 9.6C21 5.9 17 3 12 3z"/>'],
+  update: ['#1fdc6a', '<path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/>'],
+  search: ['#4285f4', '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/>'],
+  theme: ['#ffb21e', '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'],
+  games: ['#ffb21e', '<path d="M7.5 7h9a5 5 0 0 1 4.9 6l-.8 3.8a2.4 2.4 0 0 1-4.1 1.1L14.4 16H9.6l-2.1 1.9a2.4 2.4 0 0 1-4.1-1.1L2.6 13a5 5 0 0 1 4.9-6z"/>'],
+  video: ['#e50914', '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 4v16M16.5 4v16"/>'],
+  discord: ['#5b6cff', '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/>'],
+  star: ['#ff6fb1', '<path d="M12 3.5l2.4 5.2 5.6.7-4.1 3.9 1 5.6L12 16.2l-4.9 2.7 1-5.6-4.1-3.9 5.6-.7z"/>'],
+};
+const svg = (paths, w = 2.2) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
+const ARROW = svg('<path d="M5 12h14M13 6l6 6-6 6"/>', 2.4);
+const RESTART = svg('<path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/>', 2.4);
+const CHECK = svg('<path d="M5 12l5 5 9-10"/>', 3.2);
+const WARN = svg('<path d="M12 8v5M12 16.5v.5"/>', 3.2);
+const DOWN = svg('<path d="M12 4v12M7 11l5 5 5-5"/>', 3);
+
+let data = null;
+
+function notesHtml(n, title) {
+  if (!n || !n.items || !n.items.length) return '';
+  return `<h3>${esc(title || n.titre || 'Nouveautés')}</h3>` + n.items.map((it) => {
+    const [c, paths] = ICONS[it.icone] || ICONS.star;
+    return `<div class="note"><span class="ic" style="background:${c}">${svg(paths)}</span><span>${esc(it.texte)}</span></div>`;
+  }).join('');
+}
+
+function button(cls, act, label, icon = '') { return `<button class="${cls}" data-act="${act}">${icon}${esc(label)}</button>`; }
+
+function render() {
+  const { mode, state: s, current, notes } = data;
+  const body = document.body;
+  let kicker = '', title = '', sub = '', actions = '', foot = '', notesBlock = '', badge = '', badgeColor = '';
+  body.className = '';
+  const ver = (a, b) => b ? `<span class="ver"><span>${esc(a)}</span>${ARROW}<span class="new">${esc(b)}</span></span>` : `<span class="ver"><span class="new">${esc(a)}</span></span>`;
+
+  if (mode === 'updated') {
+    kicker = ver(current);
+    title = 'Simply Hub a été mis à jour';
+    sub = 'Voici ce qui change dans cette version.';
+    notesBlock = notesHtml(notes, notes?.titre);
+    actions = button('primary', 'close', 'C’est parti', ARROW);
+    badge = CHECK; badgeColor = '#1fdc6a';
+  } else switch (s.status) {
+    case 'ready':
+      kicker = ver(current, s.version);
+      title = 'Une nouvelle version est prête';
+      sub = 'Elle est déjà téléchargée. Redémarre Simply Hub pour l’installer : ça ne prend que quelques secondes.';
+      notesBlock = notesHtml(notes, 'Au programme');
+      actions = button('primary', 'install', 'Redémarrer maintenant', RESTART) + button('secondary', 'close', 'Plus tard');
+      foot = 'Si tu choisis « Plus tard », elle s’installera toute seule quand tu quitteras Simply Hub.';
+      badge = DOWN; badgeColor = '#5b6cff';
+      break;
+    case 'downloading':
+      body.classList.add('downloading');
+      kicker = ver(current, s.version || '…');
+      title = 'Téléchargement de la mise à jour';
+      sub = 'Tu peux continuer à utiliser Simply Hub pendant ce temps.';
+      notesBlock = notesHtml(notes, 'Au programme');
+      actions = button('secondary', 'close', 'Continuer en arrière-plan');
+      break;
+    case 'checking': case 'idle':
+      body.classList.add('checking');
+      kicker = ver(current);
+      title = 'Recherche de mises à jour…';
+      sub = 'Simply Hub regarde s’il existe une nouvelle version.';
+      actions = button('secondary', 'close', 'Fermer');
+      break;
+    case 'uptodate':
+      kicker = ver(current);
+      title = 'Tu as la dernière version';
+      sub = 'Simply Hub est à jour. Les prochaines versions arriveront toutes seules.';
+      actions = button('primary', 'close', 'Parfait', CHECK);
+      badge = CHECK; badgeColor = '#1fdc6a';
+      break;
+    case 'available':
+      kicker = ver(current, s.version);
+      title = 'Une nouvelle version est sortie';
+      sub = 'Tu utilises la version portable : télécharge la nouvelle version sur le site, puis remplace ton fichier.';
+      notesBlock = notesHtml(notes, 'Au programme');
+      actions = button('primary', 'site', 'Télécharger sur le site', DOWN) + button('secondary', 'close', 'Plus tard');
+      badge = DOWN; badgeColor = '#5b6cff';
+      break;
+    case 'dev':
+      kicker = ver(current);
+      title = 'Mode développement';
+      sub = 'Les mises à jour automatiques marchent dans la version installée (SimplyHub-Setup.exe).';
+      actions = button('secondary', 'close', 'Fermer');
+      break;
+    default: // error
+      kicker = ver(current);
+      title = 'Vérification impossible';
+      sub = 'Simply Hub n’a pas pu joindre GitHub. Vérifie ta connexion Internet, puis réessaie.';
+      actions = button('primary', 'check', 'Réessayer', RESTART) + button('secondary', 'close', 'Fermer');
+      badge = WARN; badgeColor = '#ff4d5e';
+  }
+
+  $('#kicker').innerHTML = kicker;
+  $('#title').textContent = title;
+  $('#sub').textContent = sub;
+  $('#notes').innerHTML = notesBlock;
+  $('#notes').classList.toggle('show', !!notesBlock);
+  $('#actions').innerHTML = actions;
+  $('#foot').textContent = foot;
+  $('#bar').style.width = (s.percent || 0) + '%';
+  $('#pct').textContent = s.percent ? `${s.percent} %` : 'Préparation…';
+  const b = $('#badge');
+  b.innerHTML = badge; b.style.background = badgeColor; b.classList.toggle('show', !!badge);
+}
+
+async function refresh() { data = await window.upd.get(); render(); }
+
+let closing = false;
+function close() {
+  if (closing) return;
+  closing = true;
+  document.body.classList.add('closing');
+  setTimeout(() => window.upd.later(), 170);
+}
+
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('[data-act]');
+  if (a) {
+    const act = a.dataset.act;
+    if (act === 'install') window.upd.install();
+    else if (act === 'check') window.upd.check();
+    else if (act === 'site') { window.upd.site(); close(); }
+    else close();
+    return;
+  }
+  if (e.target.id === 'backdrop') close();
+});
+$('#x').addEventListener('click', close);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') close();
+  if (e.key === 'Enter' && !e.target.closest('button')) $('#actions button')?.click();
+});
+window.upd.onChanged(() => { closing = false; document.body.classList.remove('closing'); refresh(); });
+refresh();
+</script>
+</body>
+</html>

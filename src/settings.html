@@ -20,15 +20,15 @@
   .wrap { display: grid; grid-template-columns: 240px 1fr; height: 100%; }
 
   /* ---------- Navigation ---------- */
-  aside { border-right: 1px solid var(--line); padding: 22px 12px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
-  aside h1 { font-size: 22px; font-weight: 750; padding: 0 10px 14px; letter-spacing: -.3px; }
+  aside { background: var(--deep); border-right: 1px solid color-mix(in srgb, var(--text) 7%, transparent); padding: 22px 12px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
+  aside h1 { font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; font-size: 24px; font-weight: 750; padding: 0 10px 14px; letter-spacing: -.4px; }
   .search { display: flex; align-items: center; gap: 8px; margin: 0 4px 14px; padding: 8px 12px; border-radius: 10px; background: var(--panel); color: var(--muted); }
   .search:focus-within { box-shadow: 0 0 0 2px var(--on); }
   .search input { flex: 1; min-width: 0; background: none; border: 0; outline: none; color: var(--text); }
   .search svg { width: 16px; height: 16px; }
   aside a { display: flex; align-items: center; gap: 11px; padding: 9px 12px; border-radius: 10px; color: var(--muted); cursor: pointer; font-weight: 600; text-decoration: none; }
   aside a:hover { background: var(--panel); color: var(--text); }
-  aside a.on { background: var(--panel2); color: var(--text); }
+  aside a.on { background: var(--panel); color: var(--text); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 7%, transparent); }
   aside a .ic { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--panel); color: var(--c, var(--muted)); }
   aside a.on .ic { background: var(--c, var(--on)); color: #fff; }
   aside a .ic svg { width: 16px; height: 16px; }
@@ -40,11 +40,13 @@
   main { position: relative; overflow-y: auto; padding: 28px 36px 60px; scroll-behavior: smooth; }
   .inner { max-width: 780px; }
   section { padding-bottom: 26px; scroll-margin-top: 18px; }
-  section > h2 { font-size: 20px; font-weight: 750; margin: 8px 0 4px; letter-spacing: -.2px; display: flex; align-items: center; gap: 10px; }
+  section > h2 { font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; font-size: 22px; font-weight: 750; margin: 8px 0 4px; letter-spacing: -.3px; display: flex; align-items: center; gap: 10px; }
   section > p.intro { color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin-bottom: 14px; }
+  .card { background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 100%, #fff 2%), var(--panel)); border: 1px solid color-mix(in srgb, var(--text) 7%, transparent);
+    border-radius: 16px; overflow: hidden; margin-bottom: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.12); }
   .card h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .7px; color: var(--muted); padding: 14px 18px 4px; font-weight: 750; }
-  .row { display: flex; align-items: center; gap: 16px; padding: 14px 18px; border-top: 1px solid var(--line); }
+  .row { display: flex; align-items: center; gap: 16px; padding: 14px 18px; border-top: 1px solid color-mix(in srgb, var(--text) 5%, transparent); transition: background .12s; }
+  .row:hover { background: color-mix(in srgb, var(--text) 2%, transparent); }
   .card h3 + .row, .card > .row:first-child { border-top: 0; }
   .row .txt { flex: 1; min-width: 0; }
   .row .txt b { display: block; font-weight: 600; }
@@ -63,10 +65,11 @@
   .switch input:disabled + i { opacity: .4; }
   .switch input:focus-visible + i { box-shadow: 0 0 0 3px color-mix(in srgb, var(--on) 50%, transparent); }
 
-  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 9px; background: var(--panel2); font-weight: 600; white-space: nowrap;
-    border: 1px solid var(--line); transition: background .12s; }
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 10px; background: var(--panel2); font-weight: 650; white-space: nowrap;
+    border: 1px solid color-mix(in srgb, var(--text) 7%, transparent); transition: background .12s, transform .12s; }
+  .btn:active { transform: scale(.97); }
   .btn:hover { background: var(--hover); }
-  .btn.primary { background: var(--on); border-color: transparent; color: #fff; }
+  .btn.primary { background: linear-gradient(90deg, var(--on), color-mix(in srgb, var(--on) 70%, #4ab0ff)); border-color: transparent; color: #fff; box-shadow: 0 6px 18px color-mix(in srgb, var(--on) 35%, transparent); }
   .btn.primary:hover { filter: brightness(1.1); }
   .btn.danger { color: var(--bad); }
   .btn:disabled { opacity: .45; pointer-events: none; }
@@ -413,7 +416,7 @@ function sectionAbout() {
   const u = S.update, a = S.app;
   let st, btn;
   switch (u.status) {
-    case 'ready': st = status('ok', `Version ${u.version} prête`); btn = act('installUpdate', 'Redémarrer et installer', '', 'primary'); break;
+    case 'ready': st = status('ok', `Version ${u.version} prête`); btn = act('checkUpdate', 'Voir la mise à jour', '', 'primary'); break;
     case 'downloading': st = status('warn', `Téléchargement ${u.percent ? u.percent + ' %' : '…'}`); btn = act('checkUpdate', 'Patiente…', '', '" disabled data-x="'); break;
     case 'checking': st = status('warn', 'Recherche…'); btn = act('checkUpdate', 'Patiente…', '', '" disabled data-x="'); break;
     case 'available': st = status('warn', `Version ${u.version} disponible`); btn = act('openSite', 'Télécharger sur le site', '', 'primary'); break;

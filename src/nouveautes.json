@@ -1,0 +1,9 @@
+{
+  "titre": "Nouveau design",
+  "items": [
+    { "icone": "design", "texte": "Toute l’interface est redessinée : les pages s’affichent dans une carte arrondie, la barre latérale et la barre du haut sont plus claires." },
+    { "icone": "update", "texte": "Une nouvelle fenêtre de mise à jour, avec les nouveautés et la progression du téléchargement." },
+    { "icone": "search", "texte": "Onglet Recherche : 12 moteurs au choix (Google, Qwant, DuckDuckGo, Ecosia…) et une barre d’adresse (Ctrl+L)." },
+    { "icone": "theme", "texte": "Les couleurs de l’interface s’adaptent à chaque onglet." }
+  ]
+}

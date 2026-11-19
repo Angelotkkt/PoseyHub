@@ -33,7 +33,9 @@ protocol.registerSchemesAsPrivileged([{
 // Configuration
 // ---------------------------------------------------------------------------
 const SIDEBAR = 76;   // largeur de la barre latérale (px)
-const TOPBAR = 40;    // hauteur de la barre du haut (px)
+const TOPBAR = 46;    // hauteur de la barre du haut (px)
+const GAP = 8;        // marge autour de la carte qui contient la page
+const RADIUS = 14;    // arrondi de la carte
 const ASSETS = path.join(__dirname, '..', 'assets');
 const ICON = path.join(ASSETS, process.platform === 'win32' ? 'icon.ico' : 'icon.png');
 
@@ -174,6 +176,8 @@ const DEFAULTS = {
   closeToTray: true,
   alwaysOnTop: false,
   trayHintShown: false,
+  updatePromptedFor: null,    // version pour laquelle la fenêtre « prête à installer » s'est déjà affichée
+  lastRunVersion: null,       // pour afficher les nouveautés après une mise à jour
   startHidden: true,          // au démarrage de Windows : rester dans la zone de notification
   preloadAll: true,           // charger tous les services au lancement
   theme: 'auto',              // 'auto' = selon l'onglet, sinon un des THEMES
@@ -288,6 +292,7 @@ function applyChromeTheme() {
   win.setBackgroundColor(t.bg);
   try { win.setTitleBarOverlay({ color: t.bg, symbolColor: t.text, height: TOPBAR }); } catch { /* ignore */ }
   applyTheme(win.webContents, t);
+  if (overlay && !overlay.webContents.isDestroyed()) applyTheme(overlay.webContents, t);
 }
 function applyThemeEverywhere() {
   applyChromeTheme();
@@ -462,6 +467,7 @@ function createView(service) {
 
   wc.loadURL(urlOf(service));
   layout();
+  raiseOverlay();
   return st;
 }
 
@@ -480,12 +486,105 @@ function applyZoom(wc) {
 function layout() {
   if (!win || win.isDestroyed()) return;
   const { width, height } = win.getContentBounds();
+  const full = win.isFullScreen() && !htmlFullscreen; // F11 : on garde la carte mais sans marge
   for (const [id, st] of Object.entries(views)) {
-    if (htmlFullscreen && id === activeId) {
+    const fill = htmlFullscreen && id === activeId;
+    if (fill) {
       st.view.setBounds({ x: 0, y: 0, width, height });
     } else {
-      st.view.setBounds({ x: SIDEBAR, y: TOPBAR, width: Math.max(0, width - SIDEBAR), height: Math.max(0, height - TOPBAR) });
+      const g = full ? 0 : GAP;
+      st.view.setBounds({
+        x: SIDEBAR, y: TOPBAR,
+        width: Math.max(0, width - SIDEBAR - g), height: Math.max(0, height - TOPBAR - g),
+      });
     }
+    if (typeof st.view.setBorderRadius === 'function') st.view.setBorderRadius(fill || full ? 0 : RADIUS);
+  }
+  if (overlay) overlay.setBounds({ x: 0, y: 0, width, height });
+}
+
+// ---------------------------------------------------------------------------
+// Fenêtre de mise à jour (par-dessus tout, fond transparent)
+// ---------------------------------------------------------------------------
+let overlay = null;
+let overlayMode = 'update';
+let overlayOpen = false;
+let remoteNotes = null;
+const localNotes = (() => { try { return require('./nouveautes.json'); } catch { return null; } })();
+
+async function fetchRemoteNotes() {
+  try {
+    const r = await fetch('https://raw.githubusercontent.com/Angelotkkt/PoseyHub/main/src/nouveautes.json?t=' + Date.now(), { signal: AbortSignal.timeout(6000) });
+    if (r.ok) remoteNotes = await r.json();
+  } catch { /* hors ligne : on garde les nouveautés connues */ }
+}
+
+function raiseOverlay() {
+  if (!overlay || !overlayOpen) return;
+  try { win.contentView.removeChildView(overlay); } catch { /* ignore */ }
+  win.contentView.addChildView(overlay);
+}
+
+function showUpdateModal(mode = 'update') {
+  if (!win || win.isDestroyed()) return;
+  overlayMode = mode;
+  if (mode !== 'updated') fetchRemoteNotes().then(() => pushUpdate());
+  if (!overlay) {
+    overlay = new WebContentsView({
+      webPreferences: { preload: path.join(__dirname, 'updatePreload.js'), contextIsolation: true, sandbox: true },
+    });
+    overlay.setBackgroundColor('#00000000');
+    overlay.webContents.on('dom-ready', () => applyTheme(overlay.webContents, theme()));
+    overlay.webContents.on('before-input-event', (e, input) => {
+      if (input.type === 'keyDown' && input.control && input.shift && input.key.toLowerCase() === 'i') overlay.webContents.openDevTools({ mode: 'detach' });
+    });
+    overlay.webContents.loadFile(path.join(__dirname, 'update.html'));
+  } else {
+    pushUpdate();
+  }
+  overlayOpen = true;
+  overlay.setVisible(true);
+  raiseOverlay();
+  layout();
+  if (!win.isVisible()) win.show();
+  overlay.webContents.focus();
+}
+
+function hideUpdateModal() {
+  if (!overlay) return;
+  overlayOpen = false;
+  overlay.setVisible(false);
+  activeWc()?.focus();
+}
+
+function pushUpdate() {
+  if (overlay && !overlay.webContents.isDestroyed()) overlay.webContents.send('upd:changed');
+}
+
+const fromOverlay = (e) => overlay && e.sender === overlay.webContents;
+ipcMain.handle('upd:get', (e) => {
+  if (!fromOverlay(e)) throw new Error('Accès refusé');
+  return {
+    mode: overlayMode,
+    state: updater.state(),
+    current: app.getVersion(),
+    portable: updater.isPortable(),
+    notes: overlayMode === 'updated' ? localNotes : (remoteNotes || null),
+  };
+});
+ipcMain.on('upd:install', (e) => { if (fromOverlay(e)) updater.installNow(); });
+ipcMain.on('upd:close', (e) => { if (fromOverlay(e)) hideUpdateModal(); });
+ipcMain.on('upd:check', (e) => { if (fromOverlay(e)) { overlayMode = 'update'; updater.check(); } });
+ipcMain.on('upd:site', (e) => { if (fromOverlay(e)) shell.openExternal(updater.SITE); });
+
+// Réaction aux changements de l'outil de mise à jour
+function onUpdaterChange(u) {
+  sendState(); updateUnread(); pushSettings(); pushUpdate();
+  // Nouvelle version téléchargée : on la propose une fois, quand la fenêtre est visible
+  if (u.status === 'ready' && settings.updatePromptedFor !== u.version && win?.isVisible() && !win.isMinimized() && !htmlFullscreen) {
+    settings.updatePromptedFor = u.version;
+    saveSettings();
+    if (!overlayOpen) showUpdateModal('update');
   }
 }
 
@@ -633,7 +732,7 @@ ipcMain.on('switch', (_e, id) => (id === 'settings' ? toggleSettings() : switchT
 ipcMain.on('nav', (_e, action) => navigate(action));
 ipcMain.on('menu', () => toggleSettings());
 ipcMain.on('mute', (_e, id) => { if (pageById(id) && !pageById(id).page) setMuted(id, !settings.muted[id]); });
-ipcMain.on('update-install', () => updater.installNow());
+ipcMain.on('update-install', () => showUpdateModal('update'));
 ipcMain.on('service-menu', (_e, id) => serviceMenu(id));
 ipcMain.on('engine-menu', () => engineMenu());
 ipcMain.on('search-go', (_e, text) => searchGo(text));
@@ -925,7 +1024,7 @@ async function settingsAction(name, arg) {
     case 'devtools': if (s) { if (!views[s.id]) createView(s); wcOf(s.id)?.openDevTools({ mode: 'detach' }); } break;
     case 'clearCache': if (s) { await session.fromPartition('persist:' + s.id).clearCache(); wcOf(s.id)?.reload(); return 'Cache vidé'; } break;
     case 'logout': if (s) return logout(s); break;
-    case 'checkUpdate': updater.check(true); break;
+    case 'checkUpdate': showUpdateModal('update'); updater.check(); break;
     case 'installUpdate': updater.installNow(); break;
     case 'vencordUpdate': return (await vencordUpdate(true)) ? 'Vencord mis à jour' : (vencord.status().error ? null : 'Vencord est déjà à jour');
     case 'vencordSettings':
@@ -1148,7 +1247,7 @@ if (!app.requestSingleInstanceLock()) {
     updater.init({
       window: () => win,
       prepareQuit: () => { quitting = true; },
-      changed: () => { sendState(); updateUnread(); pushSettings(); },
+      changed: onUpdaterChange,
     });
 
     // Vencord : installation au premier lancement, puis vérification des nouveautés
@@ -1159,6 +1258,13 @@ if (!app.requestSingleInstanceLock()) {
     }
 
     const list = visibleServices();
+    // Après une mise à jour : afficher les nouveautés une fois
+    if (app.isPackaged && settings.lastRunVersion && settings.lastRunVersion !== app.getVersion()) {
+      setTimeout(() => { if (win?.isVisible()) showUpdateModal('updated'); }, 2500);
+    }
+    settings.lastRunVersion = app.getVersion();
+    saveSettings();
+
     const first = list.some((s) => s.id === settings.lastService) ? settings.lastService : list[0].id;
     switchTo(first);
 
