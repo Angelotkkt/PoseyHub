@@ -61,13 +61,23 @@
 
   /* Grilles */
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
-  .row { display: grid; grid-auto-flow: column; grid-auto-columns: 150px; gap: 16px; overflow-x: auto; padding-bottom: 6px; }
+  .row { display: grid; grid-auto-flow: column; grid-auto-columns: 150px; gap: 16px; overflow-x: auto; overflow-y: hidden;
+    padding: 10px 10px 12px; margin: -10px -10px -4px; scrollbar-width: thin; }
+  .row.fade-r { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent); }
+  .row.fade-l { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 56px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 56px), transparent); }
+  .row.fade-l.fade-r { -webkit-mask-image: linear-gradient(to right, transparent, #000 56px, #000 calc(100% - 56px), transparent); mask-image: linear-gradient(to right, transparent, #000 56px, #000 calc(100% - 56px), transparent); }
+  .row::-webkit-scrollbar { height: 8px; } .row::-webkit-scrollbar-thumb { background: var(--hover); border-radius: 4px; }
   .card { position: relative; border-radius: 12px; cursor: pointer; outline: none; min-width: 0; }
   .card .art { position: relative; aspect-ratio: 2 / 3; border-radius: 12px; overflow: hidden; background: var(--panel);
     transition: transform .16s, box-shadow .16s; }
   .card:hover .art, .card:focus-visible .art { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(0,0,0,.5), 0 0 0 2px var(--gold); }
   .art img.cover { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .art img.cover.wide { object-position: center; }
+  .art .wide { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden; background: var(--panel); }
+  .art .wide .blur { position: absolute; inset: -24px; width: calc(100% + 48px); height: calc(100% + 48px); object-fit: cover;
+    filter: blur(22px) saturate(1.3) brightness(.6); transform: scale(1.15); }
+  .art .wide .fit { position: relative; width: 100%; height: auto; max-height: 100%; object-fit: contain; display: block;
+    box-shadow: 0 10px 26px rgba(0,0,0,.5); }
+  .art .wide::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.25), transparent 30%, transparent 70%, rgba(0,0,0,.3)); pointer-events: none; }
   .tile { position: absolute; inset: 0; display: grid; place-items: center; }
   .tile .ico { width: 64px; height: 64px; border-radius: 14px; object-fit: contain; filter: drop-shadow(0 6px 14px rgba(0,0,0,.45)); image-rendering: auto; }
   .tile .ini { font-size: 34px; font-weight: 800; color: rgba(255,255,255,.92); text-shadow: 0 4px 14px rgba(0,0,0,.35); letter-spacing: -1px; }
@@ -190,8 +200,28 @@ function subline(g) {
 }
 
 // ---------- rendu ----------
+function updateFade(r) {
+  r.classList.toggle('fade-l', r.scrollLeft > 4);
+  r.classList.toggle('fade-r', r.scrollLeft + r.clientWidth < r.scrollWidth - 4);
+}
+window.addEventListener('resize', () => document.querySelectorAll('.row').forEach(updateFade));
+// Molette verticale = défilement horizontal dans les rangées
+document.addEventListener('wheel', (e) => {
+  const r = e.target.closest('.row');
+  if (!r || Math.abs(e.deltaX) > Math.abs(e.deltaY) || r.scrollWidth <= r.clientWidth) return;
+  const atStart = r.scrollLeft <= 0 && e.deltaY < 0;
+  const atEnd = r.scrollLeft + r.clientWidth >= r.scrollWidth - 1 && e.deltaY > 0;
+  if (atStart || atEnd) return;
+  e.preventDefault();
+  r.scrollLeft += e.deltaY;
+}, { passive: false });
+
 function art(g) {
-  if (g.cover) return `<img class="cover ${g.coverPortrait ? '' : 'wide'}" src="${esc(g.cover)}" alt="" loading="lazy" draggable="false">`;
+  if (g.cover && g.coverPortrait) return `<img class="cover" src="${esc(g.cover)}" alt="" loading="lazy" draggable="false">`;
+  if (g.cover) {
+    return `<div class="wide"><img class="blur" src="${esc(g.cover)}" alt="" loading="lazy" draggable="false" aria-hidden="true">`
+      + `<img class="fit" src="${esc(g.cover)}" alt="" loading="lazy" draggable="false"></div>`;
+  }
   const h = hue(g.name);
   return `<div class="tile" style="background:linear-gradient(160deg,hsl(${h} 55% 34%),hsl(${(h + 40) % 360} 60% 16%))">
     ${g.icon ? `<img class="ico" src="${esc(g.icon)}" alt="" draggable="false">` : `<span class="ini">${esc(initials(g.name))}</span>`}
@@ -280,6 +310,7 @@ function render() {
     : `<div class="empty">Aucun jeu ne correspond.</div>`;
   if (data.scanning) html += '<div class="scanning"><i></i>Recherche de nouveaux jeux…</div>';
   main.innerHTML = html;
+  main.querySelectorAll('.row').forEach((r) => { updateFade(r); r.addEventListener('scroll', () => updateFade(r), { passive: true }); });
   main.scrollTop = scroll;
 }
 
